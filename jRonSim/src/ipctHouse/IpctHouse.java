@@ -36,9 +36,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import thermostat.*;
 
-/**
- *
- * @author WJBurke
+/**  The house object contains a thermostat and a thermal simulation of a house.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class IpctHouse {
 
@@ -48,6 +48,11 @@ public class IpctHouse {
     private ThermalSys therm;
     private PrintWriter dataFile0 = null;
 
+    /** The constructor for a house object.
+     *
+     * @param name -- the private name of the house
+     * @param tm -- the timer the house is to use.  
+     */
     public IpctHouse(String name, TrjTime tm) {
 
         this.name = name;
@@ -65,59 +70,101 @@ public class IpctHouse {
         tstat = new ThermostatSys("Basic Thermostat", tm, therm, true);
     }
 
-    void run() {
+    /** runs the house system states and simulation.
+     * 
+     * @return indicates the need to stop the program (true, false)
+     */
+    boolean run() {
+        boolean stop = false;
         TrjSys syss[] = {therm, tstat};
         for (TrjSys sys : syss) {
-            if (sys.RunTasks()) {
+            if (stop = sys.RunTasks()) {
                 break; // Run all of the tasks
             }
         }
+        return stop;
     }
 
+    /** exit function that cleans before final shutdown.
+     * 
+     */
     void exit() {
+        System.out.println("exited");
         dataFile0.close();
     }
 
+    /** Log function for the house system.
+     * 
+     */
     void log() {
-        dataFile0.println(tm.getRunningTime() + "\t" +
-                therm.getTempInside() + "\t" +
-                therm.getCoolerOnState());
+        //System.out.println("here1");
+        dataFile0.printf("%6.3f\t %3.3f\t %s\n", tm.getRunningTime(),
+                therm.getTempInside(),
+                Boolean.toString(therm.getCoolerOnState()));
+        //System.out.println("here2");
     }
 
+    /** Test function
+     * 
+     * @param args
+     */
     public static void main(String[] args) {
         double dt = 5.0;  // Used for samples that need a time delta
         double tFinal = 24 * 60 * 60;  // sec
-        TrjTimeAccel tm = new TrjTimeAccel(100);
+        TrjTimeAccel tm = new TrjTimeAccel(300);
         IpctHouse hs = new IpctHouse("The basic house", tm);
 
         IpctHouseRunnable runner = new IpctHouseRunnable(dt, tFinal, tm, hs);
         Thread t = new Thread(runner);
         t.start();
-
     }
 }
 
+/** This is an implementable house.
+ * 
+ * @author WJBurke
+ */
 class IpctHouseRunnable implements Runnable {
 
     private double dt;
+    private double dtLog;
     private double tFinal;
+    private double tLogNext;
     private TrjTime tm;
     private final IpctHouse hs;
 
+    /** Constructor for the implementable house.
+     * 
+     * @param dt -- time step
+     * @param tFinal -- final running time
+     * @param tm -- timing structure
+     * @param hs -- the ipctHouse that is made implementable
+     */
     IpctHouseRunnable(double dt, double tFinal, TrjTime tm, IpctHouse hs) {
         this.dt = dt;
+        this.dtLog = 30;
+        this.tLogNext = 0;
         this.tFinal = tFinal;
         this.tm = tm;
         this.hs = hs;
     }
 
+    /** run functions
+     * 
+     */
     public void run() {
-        while (tm.getRunningTime() <= tFinal && !Thread.interrupted()) {
-            hs.run();
-            hs.log();
+        boolean stop = false;
+        while (tm.getRunningTime() <= tFinal && !stop) {
+            stop = hs.run();
+            if (tm.getRunningTime() >= tLogNext) {
+                hs.log();
+                //System.out.println("here");
+                tLogNext += dtLog;
+            }
             tm.incrementRunningTime(dt);
         }
         hs.exit();
         System.out.println("Simulation Stopped");
+        System.exit(0);
     }
 }

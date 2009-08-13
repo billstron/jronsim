@@ -28,39 +28,76 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package thermostat;
+package thermostat.goalSeeker;
 
+import thermostat.*;
 import TranRunJLite.*;
 
-/**
- *
- * @author WJBurke
+/** The generic Goal Seeker State that all other Goal Seeker State should be
+ * built from.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class GoalSeekerState extends TrjState {
 
-    GoalSeekerTask goalSeeker;
+    GoalSeekerTask task;
     SupervisorTask sup;
     CoordinatorTask coord;
+    UserInterfaceTask ui;
 
+    /** Construct the generic Goal Seeker State.
+     * 
+     * @param name
+     * @param task
+     * @param sup -- supervisor task
+     * @param coord -- coordinator task
+     * @param ui -- user interface task.  
+     */
     public GoalSeekerState(String name, GoalSeekerTask task,
-            SupervisorTask sup, CoordinatorTask coord) {
+            SupervisorTask sup, CoordinatorTask coord, UserInterfaceTask ui) {
         super(name, task);
 
-        this.goalSeeker = task;
+        this.task = task;
         this.sup = sup;
         this.coord = coord;
+        this.ui = ui;
 
     }
 
+    /** Gets the data from the various tasks for processing.
+     *
+     */
     void getData() {
-        // get the most recent data
-        goalSeeker.setTin(coord.getTin());
-        goalSeeker.setNewSp(sup.isNewSetpoint());
-        goalSeeker.setHoldOn(sup.isHoldOn());
+        // get the coordinator data.
+        task.Tin = coord.getTin();
+        task.heaterOn = coord.isHeaterOn();
+        task.coolerOn = coord.isCoolerOn();
+        // get the supervisor data.
+        task.newSp = sup.isNewSetpoint();
+        // get hte user interface data
+        task.holdOn = ui.getHoldToggle();
+        task.TspMod = ui.getTspMod();
+        task.uiMode = ui.getThermostatMode();
+        
     }
 
+    /** Send the data back to the various tasks.
+     * 
+     */
     void sendData() {
         // propogate the setpoint
-        coord.setTsp(goalSeeker.getTsp());
+        coord.setTsp(task.Tsp);
+        ui.setTsp(task.Tsp);
+        // propogate the inside temp
+        ui.setTin(task.Tin);
+        // progogate the hold state;
+        ui.setHoldOn(task.holdOn);
+        sup.setHoldOn(task.holdOn);
+        // propogate the unit on state
+        ui.setHeaterLed(task.heaterOn);
+        ui.setCoolerLed(task.coolerOn);
+        // propogate the thermostat mode
+        //System.out.println("here: " + task.tstatMode);
+        coord.setMode(task.tstatMode);
     }
 }

@@ -30,14 +30,15 @@
  */
 package thermostat;
 
+import thermostat.goalSeeker.GoalSeekerTask;
 import houseSimulation.HouseIO;
 import TranRunJLite.*;
 import javax.swing.SwingUtilities;
 import userInterface.UserInterfaceJFrame;
 
-/**
- *
- * @author bill
+/** The TrjSys that implements a thermostat.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class ThermostatSys extends TrjSys {
 
@@ -49,6 +50,12 @@ public class ThermostatSys extends TrjSys {
     private final GoalSeekerTask goalSeeker;
     private final UserInterfaceTask userInterface;
 
+    /** Construct the Thermostat System.
+     * 
+     * @param name
+     * @param tm
+     * @param therm -- Where to send the input/output data.  
+     */
     public ThermostatSys(String name, TrjTime tm, HouseIO therm) {
         super(tm);
 
@@ -61,18 +68,26 @@ public class ThermostatSys extends TrjSys {
 
         coordinator = new CoordinatorTask("Coordinator Task",
                 this, heaterContTask, coolerContTask, 5.0);
-        coordinator.setMode(CoordinatorMode.COOLING);
+        coordinator.setMode(ThermostatMode.COOLING);
 
         supervisor = new SupervisorTask("Supervisor Task", this,
                 5.0);
-
-        goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
-                supervisor, coordinator, 5.0);
+        //supervisor.SetStateTracking(true);
 
         userInterface = new UserInterfaceTask("User Interface Task", this,
-                goalSeeker, 0.5);
+                0.5);
+
+        goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
+                supervisor, coordinator, userInterface, 5.0);
     }
 
+    /** Construct the Thermostat System with a GUI.
+     *
+     * @param name
+     * @param tm
+     * @param therm -- where to send the input/output data.
+     * @param uiFlag -- create a gui?
+     */
     public ThermostatSys(String name, TrjTime tm, HouseIO therm, boolean uiFlag) {
         super(tm);
 
@@ -85,16 +100,16 @@ public class ThermostatSys extends TrjSys {
 
         coordinator = new CoordinatorTask("Coordinator Task",
                 this, heaterContTask, coolerContTask, 5.0);
-        coordinator.setMode(CoordinatorMode.COOLING);
+        coordinator.setMode(ThermostatMode.COOLING);
 
         supervisor = new SupervisorTask("Supervisor Task", this,
                 5.0);
 
-        goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
-                supervisor, coordinator, 5.0);
-
         userInterface = new UserInterfaceTask("User Interface Task", this,
-                goalSeeker, 0.5);
+                0.5);
+        
+        goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
+                supervisor, coordinator, userInterface, 5.0);
 
         if (uiFlag) {
             UserInterfaceJFrame gui = new UserInterfaceJFrame(userInterface);

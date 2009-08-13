@@ -33,7 +33,7 @@ package thermostat;
 
 /**Defines the control types avaliable to the Control Task.
  *
- * @author WJBurke
+ * @author William Burke <billstron@gmail.com>
  */
 public enum ControlType {
     HYSTERESIS, LINEAR;

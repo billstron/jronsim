@@ -31,33 +31,10 @@
 
 package thermostat;
 
-/**
- *
- * @author WJBurke
+/** Defines the modes of opperaiton for the Coordinator Task
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
-class GoalSeekerStateNormal extends GoalSeekerState {
-
-    GoalSeekerStateNormal(String name, GoalSeekerTask task,
-            SupervisorTask sup, CoordinatorTask coord){
-        super(name, task, sup, coord);
-    }
-
-    @Override
-    protected void entryFunction(double t){
-        // nothing
-    }
-
-    @Override
-    protected void actionFunction(double t){
-        // check if there is a new setpoint
-        if(goalSeeker.isNewSp()){
-            goalSeeker.setTsp(sup.getSetpoint());
-            System.out.println("Updated setpoint: " + goalSeeker.getTsp());
-        }
-    }
-    
-    @Override
-    protected int exitFunction(double t){
-        return -1;
-    }
+public enum ThermostatMode {
+    OFF, HEATING, COOLING
 }

@@ -34,19 +34,19 @@ import TranRunJLite.*;
 /** This TrjTask-like object coordinates the operation of the heater control
  * and the cooler control.
  *
- * @author bill
+ * @author William Burke <billstron@gmail.com>
  */
 public class CoordinatorTask extends TrjTask {
 
-    double dt;
-    double tNext;
-    CoordinatorMode mode;
-    ControlTask heaterTask = null;
-    ControlTask coolerTask = null;
-    boolean heaterOn = false;
-    boolean coolerOn = false;
-    double Tin;
-    double Tsp;
+    private double dt;
+    private double tNext;
+    private ThermostatMode mode;
+    private ControlTask heaterTask = null;
+    private ControlTask coolerTask = null;
+    private boolean heaterOn = false;
+    private boolean coolerOn = false;
+    private double Tin;
+    private double Tsp;
 
     /** Constructs the Coordinator Task
      *
@@ -56,7 +56,7 @@ public class CoordinatorTask extends TrjTask {
      * @param coolerControlTask -- The cooler control Task it controls
      * @param dt
      */
-    CoordinatorTask(String name, TrjSys sys,
+    public CoordinatorTask(String name, TrjSys sys,
             ControlTask heaterControlTask,
             ControlTask coolerControlTask,
             double dt) {
@@ -66,7 +66,7 @@ public class CoordinatorTask extends TrjTask {
         this.dt = dt;
         this.tNext = 0;
 
-        this.mode = CoordinatorMode.COOLING;
+        this.mode = ThermostatMode.COOLING;
         this.heaterTask = heaterControlTask;
         this.coolerTask = coolerControlTask;
     }
@@ -112,7 +112,7 @@ public class CoordinatorTask extends TrjTask {
      *
      * @return -- mode: OFF, HEATING, COOLING
      */
-    CoordinatorMode getMode() {
+    public ThermostatMode getMode() {
         return this.mode;
     }
 
@@ -120,17 +120,43 @@ public class CoordinatorTask extends TrjTask {
      *
      * @param mode: OFF, HEATING, COOLING
      */
-    void setMode(CoordinatorMode mode) {
+    public void setMode(ThermostatMode mode) {
         this.mode = mode;
     }
 
-    double getTin() {
+    /** Gets the inside tempetature.
+     * 
+     * @return
+     */
+    public double getTin() {
         return Tin;
     }
 
-    void setTsp(double Tsp){
+    /** Sets the setpoint temperature.
+     * 
+     * @param Tsp
+     */
+    public void setTsp(double Tsp){
         this.Tsp = Tsp;
         this.heaterTask.setTsp(Tsp);
         this.coolerTask.setTsp(Tsp);
+    }
+
+    /** Returns the on-state of the heater unit.
+     * 
+     * @return
+     */
+    public boolean isHeaterOn(){
+        heaterOn = heaterTask.isUnitOn();
+        return heaterOn;
+    }
+
+    /** Returns the on-state of the cooler unit.
+     * 
+     * @return
+     */
+    public boolean isCoolerOn(){
+        coolerOn = coolerTask.isUnitOn();
+        return coolerOn;
     }
 }

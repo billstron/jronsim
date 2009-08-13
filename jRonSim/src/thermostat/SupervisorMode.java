@@ -31,8 +31,8 @@
 package thermostat;
 
 /**Defines the modes of opperation for the Supervisor Task
- *
- * @author WJBurke
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public enum SupervisorMode {
 

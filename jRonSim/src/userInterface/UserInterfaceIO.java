@@ -30,19 +30,80 @@
  */
 package userInterface;
 
-/**
- *
- * @author WJBurke
+import thermostat.ThermostatMode;
+
+/** Defines the interface for how the UserInterface should communicate with the
+ * GUI.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public interface UserInterfaceIO {
 
+    /** Get the Auxiliary display message.
+     * Used by the GUI thread.
+     *
+     * @return
+     */
     public String getAuxDisplay();
 
+    /** Get the label for the Auxiliary display.
+     * Used by the GUI thread.
+     *
+     * @return
+     */
+    public String getAuxLabel();
+
+    /** Get the main display text.
+     * Used by the GUI thread.
+     *
+     * @return
+     */
     public String getMainDisplay();
 
+    /** Get the state of the hold LED.
+     * Used by the GUI thread.
+     *
+     * @return
+     */
     public boolean getHoldLed();
 
+    /** Get the state of the Heater on-state LED.
+     * Used by the GUI thread.
+     *
+     * @return
+     */
+    public boolean getHeaterLed();
+
+    /** Get the state of the cooler on-state LED.
+     * Used by the GUI thread.
+     *
+     * @return
+     */
+    public boolean getCoolerLed();
+
+    /** Set the setpoint change.
+     * Used by the GUI thread.
+     *
+     * @param dT
+     */
     public void setSetpointChange(double dT);
 
+    /** Toggle the hold button.
+     * Used by the GUI thread.
+     *
+     */
     public void setHoldToggle();
+
+    /** Indicate that the program should be stopped.
+     * Used by the GUI thread.
+     *
+     */
+    public void stopProgram();
+
+    /** Set the current mode toggle.
+     * Used by the GUI thread.
+     *
+     * @param mode
+     */
+    public void setModeToggle(ThermostatMode mode);
 }

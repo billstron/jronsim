@@ -38,104 +38,17 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-/** The definition of a setpoint
- *
- * @author WJBurke
- */
-class Setpoint {
-
-    private double Tsp;
-    private int[] tm = new int[3];
-    private Label label;
-
-    private enum Time {
-
-        HOUR, MINUTE, SECOND
-    }
-
-    /** Labels for the Setpoint table entries
-     *
-     * @author WJBurke
-     */
-    enum Label {
-
-        MORNING("Morning"),
-        DAY("Day"),
-        EVENING("Evening"),
-        NIGHT("Night");
-        private String name;
-
-        /** Constructor fo the Setpoint Lable enum
-         *
-         * @param name -- human readable name of the entry
-         */
-        Label(String name) {
-            this.name = name;
-        }
-
-        /** Gets the name of the setpoint table entry
-         *
-         * @return name of the entry
-         */
-        public String getName() {
-            return this.name;
-        }
-    }
-
-    /** Constructor for a setpoint
-     *
-     * @param Tsp -- Setpoint temperature (^oF)
-     * @param hour -- Start hour (24 hour format: 0 - 24)
-     * @param min -- Start minute
-     * @param label -- Label for this entry
-     */
-    Setpoint(double Tsp, int hour, int min, Label label) {
-        this.tm[Time.HOUR.ordinal()] = hour;
-        this.tm[Time.MINUTE.ordinal()] = min;
-        this.tm[Time.SECOND.ordinal()] = 0;
-
-        this.Tsp = Tsp;
-        this.label = label;
-    }
-
-    double getTsp() {
-        return this.Tsp;
-    }
-
-    Label getLabel() {
-        return label;
-    }
-
-    boolean isBefore(Calendar cal) {
-        boolean isBefore = false;
-        if (tm[Time.HOUR.ordinal()] < cal.get(Calendar.HOUR_OF_DAY)) {
-            isBefore = true;
-        } else if (tm[Time.HOUR.ordinal()] == cal.get(Calendar.HOUR_OF_DAY)) {
-            if (tm[Time.MINUTE.ordinal()] <= cal.get(Calendar.MINUTE)) {
-                isBefore = true;
-            } else if (tm[Time.MINUTE.ordinal()] == cal.get(Calendar.MINUTE)) {
-                if (tm[Time.SECOND.ordinal()] <= cal.get(Calendar.SECOND)) {
-                    isBefore = true;
-                } else {
-                    isBefore = false;
-                }
-            }
-        }
-        return isBefore;
-    }
-}
-
-
-
-
-/**
- *
- * @author WJBurke
+/** Setpoint table entity.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class SetpointTable {
 
     private ArrayList<Setpoint>[] table;// = new ArrayList<Setpoint>[7];
 
+    /** Constructs the setpoint table.
+     * 
+     */
     public SetpointTable() {
         double Tsp = 75.0;
         int hour = 6;
@@ -150,6 +63,11 @@ public class SetpointTable {
         }
     }
 
+    /** Gets the setpoint for the given time.
+     * 
+     * @param cal
+     * @return
+     */
     public double getTsp(GregorianCalendar cal) {
         int day = cal.get(Calendar.DAY_OF_WEEK) - 1;
         int dayPrev = day - 1;
@@ -168,6 +86,10 @@ public class SetpointTable {
         return Tsp;
     }
 
+    /** Test function.
+     * 
+     * @param args
+     */
     public static void main(String[] args) {
 
         PrintWriter dataFile0 = null;

@@ -34,63 +34,234 @@ import TranRunJLite.TrjSys;
 import TranRunJLite.TrjTask;
 import userInterface.UserInterfaceIO;
 
-/**
- *
- * @author bill
+/** The Task that implements the User Interface.  If there is a GUI, the data
+ * from this task gets displayed.  If there isn't a GUI, the data just lives
+ * here.  
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
 
     private double dt;
     private double tNext;
-    private GoalSeekerTask gs;
     private String auxDisplay;
+    private String labelAuxMsg;
     private String mainDisplay;
-    private boolean holdLed;
-    private double Tin;
-    private double Tsp;
-    private double dTsp;
-    private boolean holdOn;
+    private boolean holdLed = false;
+    private double tDispTsp = 0;
+    private final double dtDisp = 3000;
+    private double Tin = 75;
+    private double Tsp = 75;
+    private boolean TspNew = false;
+    private double TspMod = 0;
+    private boolean holdState = false;
+    private boolean holdCmd = false;
+    private boolean heaterLed = false;
+    private boolean coolerLed = false;
+    private ThermostatMode tstatMode = ThermostatMode.COOLING;
+    private TrjSys sys;
 
-    public UserInterfaceTask(String name, TrjSys sys, GoalSeekerTask gs,
+    /** Construct the User Interface Task.
+     * 
+     * @param name
+     * @param sys
+     * @param dt
+     */
+    public UserInterfaceTask(String name, TrjSys sys,
             double dt) {
         super(name, sys, 0, true);
-
-        this.gs = gs;
+        this.sys = sys;
         this.dt = dt;
         this.tNext = 0;
     }
 
+    /** Get the Auxiliary display message.
+     * Used by the GUI thread.
+     * 
+     * @return
+     */
     public synchronized String getAuxDisplay() {
         return auxDisplay;
     }
 
+    /** Get the label for the Auxiliary display.
+     * Used by the GUI thread.
+     * 
+     * @return
+     */
+    public synchronized String getAuxLabel() {
+        return labelAuxMsg;
+    }
+
+    /** Get the main display text.
+     * Used by the GUI thread.
+     * 
+     * @return
+     */
     public synchronized String getMainDisplay() {
         return mainDisplay;
     }
 
+    /** Get the state of the hold LED.
+     * Used by the GUI thread.
+     * 
+     * @return
+     */
     public synchronized boolean getHoldLed() {
         return holdLed;
     }
 
+    /** Get the state of the Heater on-state LED.
+     * Used by the GUI thread.
+     *
+     * @return
+     */
+    public synchronized boolean getHeaterLed(){
+        return heaterLed;
+    }
+
+    /** Get the state of the cooler on-state LED.
+     * Used by the GUI thread.
+     *
+     * @return
+     */
+    public synchronized boolean getCoolerLed(){
+        //System.out.println(coolerLed);
+        return coolerLed;
+    }
+
+    /** Set the setpoint change.
+     * Used by the GUI thread.  
+     * 
+     * @param dT
+     */
     public synchronized void setSetpointChange(double dT) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        this.TspMod += dT;
+        //System.out.println("setSetpointChange: " + dT);
     }
 
+    /** Toggle the hold button.
+     * Used by the GUI thread.
+     * 
+     */
     public synchronized void setHoldToggle() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        this.holdCmd = !this.holdCmd;
+        //System.out.println("setHoldToggle: " + this.holdCmd);
     }
 
+    /** Indicate that the program should be stopped.
+     * Used by the GUI thread.
+     * 
+     */
+    public synchronized void stopProgram() {
+        sys.SetStop();
+    }
+
+    /** Set the current mode toggle.
+     * Used by the GUI thread.  
+     * 
+     * @param mode
+     */
+    public synchronized void setModeToggle(ThermostatMode mode){
+        this.tstatMode = mode;
+    }
+
+    /** Get the current hold command.
+     * 
+     * @return
+     */
+    public boolean getHoldToggle() {
+        return this.holdCmd;
+    }
+
+    /** Set the Hold state.
+     * 
+     * @param state
+     */
+    public void setHoldOn(boolean state) {
+        this.holdLed = state;
+        this.holdCmd = state;
+    }
+
+    /** Set the current setpoint.
+     * 
+     * @param Tsp
+     */
+    public void setTsp(double Tsp) {
+        if (this.Tsp != Tsp) {
+            this.TspNew = true;
+        }
+        this.Tsp = Tsp;
+    }
+
+    /** Set the current inside temperature.
+     * 
+     * @param Tin
+     */
+    public void setTin(double Tin) {
+        this.Tin = Tin;
+    }
+
+    /** Get the current setpoint modification requested.
+     * 
+     * @return
+     */
+    public double getTspMod() {
+        double mod = this.TspMod;
+        this.TspMod = 0;
+        return mod;
+    }
+
+    /** Set the heater on-state LED.
+     * 
+     * @param state
+     */
+    public void setHeaterLed(boolean state){
+        this.heaterLed = state;
+    }
+
+    /** Set the cooler on-state LED.
+     * 
+     * @param state
+     */
+    public void setCoolerLed(boolean state){
+        this.coolerLed = state;
+    }
+
+    /** Get the current thermostat mode.
+     * 
+     * @return
+     */
+    public ThermostatMode getThermostatMode(){
+        return tstatMode;
+    }
+
+    /** Run the User Interface Task.
+     * 
+     * @param sys
+     * @return
+     */
     @Override
     public boolean RunTask(TrjSys sys) {
         double t = sys.GetRunningTime();
-        if( t >= tNext){
-            Tsp = gs.getTsp();
-            Tin = gs.getTin();
-            
-            holdLed = gs.isHoldOn();
-            auxDisplay = String.format("%3.0f", Tin);
+        if (t >= tNext) {
+            if (TspNew) {
+                tDispTsp = System.currentTimeMillis() + dtDisp;
+                TspNew = false;
+            }
+            if (System.currentTimeMillis() <= tDispTsp) {
+                labelAuxMsg = "Setpoint";
+                auxDisplay = String.format("%3.0f", Tsp);
+            } else {
+                labelAuxMsg = "Temperature";
+                auxDisplay = String.format("%3.0f", Tin);
+            }
             mainDisplay = "";
             tNext += dt;
+        } else {
+            if (runEntry) {
+                nextState = currentState;
+            }
         }
         return false;
     }

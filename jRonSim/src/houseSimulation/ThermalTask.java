@@ -32,9 +32,9 @@ package houseSimulation;
 
 import TranRunJLite.*;
 
-/**
- *
- * @author bill
+/** Task that implements the most simple thermal simulation of a house.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class ThermalTask extends TrjTask {
 
@@ -47,6 +47,12 @@ public class ThermalTask extends TrjTask {
     boolean heaterOn;
     boolean coolerOn;
 
+    /** Construts the most basic house simulation
+     *
+     * @param name
+     * @param sys -- system it belongs to
+     * @param dt -- time step
+     */
     public ThermalTask(String name, TrjSys sys, double dt) {
         super(name, sys, 0, true);
 
@@ -60,6 +66,11 @@ public class ThermalTask extends TrjTask {
         this.coolerOn = false;
     }
 
+    /** Runs the basic house simulation
+     * 
+     * @param sys
+     * @return
+     */
     @Override
     public boolean RunTask(TrjSys sys) {
         double t = sys.GetRunningTime();
@@ -79,22 +90,42 @@ public class ThermalTask extends TrjTask {
         return false;
     }
 
+    /** Returns the inside temperature
+     * 
+     * @return
+     */
     double getTin() {
         return Tin;
     }
 
+    /** Sets the heater on state.
+     * 
+     * @param state
+     */
     void setHeaterOn(boolean state) {
         heaterOn = state;
     }
 
+    /** Gets the heater on state.
+     * 
+     * @return
+     */
     boolean getHeaterOn() {
         return heaterOn;
     }
 
+    /** Sets the cooler on state.
+     * 
+     * @param state
+     */
     void setCoolerOn(boolean state) {
         coolerOn = state;
     }
 
+    /** Gets the cooler on state
+     * 
+     * @return
+     */
     boolean getCoolerOn() {
         return coolerOn;
     }
