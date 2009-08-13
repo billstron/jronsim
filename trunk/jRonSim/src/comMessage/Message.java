@@ -29,12 +29,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package thermostat;
+package comMessage;
 
-/**Defines the modes of opperaiton for the Coordinator Task
+import java.net.InetAddress;
+import java.util.GregorianCalendar;
+
+/** This class defines the base message that can be sent to and from houses.
  *
- * @author WJBurke
+ * @author William Burke <billstron@gmail.com>
  */
-public enum CoordinatorMode {
-    OFF, HEATING, COOLING
+public class Message {
+    InetAddress from;
+    InetAddress to;
+    MessageType type;
+    GregorianCalendar tSent;
+
+    /** constructor for the message.
+     *
+     * @param from -- address the message is from
+     * @param type -- the type of message
+     */
+    public void Message(InetAddress from, MessageType type){
+        this.from = from;
+        this.type = type;
+    }
+
+    /** returns the type of the message
+     * 
+     * @return -- message type
+     */
+    public MessageType getType(){
+        return type;
+    }
 }

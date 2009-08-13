@@ -31,10 +31,10 @@ package thermostat;
 
 import TranRunJLite.*;
 
-/**The off state runs when no other control method is in use.  It first turns
- * off the unit and continually retreives the inside temperature.  
- *
- * @author WJBurke 7/31/2009
+/** The off state runs when no other control method is in use.  It first turns
+ * off the unit and continually retreives the inside temperature.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 class ControlStateOff extends TrjState {
 
@@ -99,7 +99,7 @@ class ControlStateOff extends TrjState {
  * thermostat.  It turns off when the temperature gets too high (for heating)
  * and turns on agian when the temperature gets too low (again, for heating).
  *
- * @author WJBurke 7/31/2009
+ * @author William Burke <billstron@gmail.com>
  */
 class ControlStateHysteresis extends TrjState {
 
@@ -198,7 +198,7 @@ class ControlStateHysteresis extends TrjState {
 /** The Linear Control State controls the inside temperature by using a linear
  * control law (PI) by opperating the HVAC equipment with as a PWM device.
  *
- * @author WJBurke 7/31/2009
+ * @author William Burke <billstron@gmail.com>
  */
 class ControlStateLinear extends TrjState {
 
@@ -224,7 +224,7 @@ class ControlStateLinear extends TrjState {
      */
     @Override
     protected void actionFunction(double t) {
-        // TODO: compute the control action
+        // TODO: compute the linear control action
     }
 
     /** Decides when transitions should occure

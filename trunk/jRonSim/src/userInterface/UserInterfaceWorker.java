@@ -33,34 +33,47 @@ package userInterface;
 import java.util.List;
 import javax.swing.SwingWorker;
 
-/**
- *
- * @author bill
+/** The UserInterfaceWorker object continually pulls data from the UserInterface
+ * Task and returns it to the UserInterface GUI.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class UserInterfaceWorker extends SwingWorker<Void, UserInterfaceData> {
 
     private UserInterfaceJFrame ui;
     private UserInterfaceIO io;
 
+    /** Construct the User Interface Worker.
+     * 
+     * @param ui -- The User Interface GUI Object.
+     * @param io -- The UserInterface IO Object (Task). 
+     */
     public UserInterfaceWorker(UserInterfaceJFrame ui, UserInterfaceIO io) {
         super();
         this.ui = ui;
         this.io = io;
     }
 
+    /** Continually get the data in the background.
+     *
+     * @return
+     * @throws Exception
+     */
     @Override
     protected Void doInBackground() throws Exception {
 
         while (!isCancelled()) {
-            //System.out.println("here1");
             publish(new UserInterfaceData(io.getAuxDisplay(),
-                    io.getMainDisplay(), io.getHoldLed()));
-            //publish(new UserInterfaceData("75", "hello there", true));
+                    io.getMainDisplay(), io.getAuxLabel(),
+                    io.getHoldLed(), io.getHeaterLed(), io.getCoolerLed()));
         }
-        System.out.println("Worker Done");
         return null;
     }
 
+    /** Set the GUI based on the latest data pulled from the IO object.
+     * 
+     * @param data
+     */
     @Override
     protected void process(List<UserInterfaceData> data) {
 
@@ -68,6 +81,9 @@ public class UserInterfaceWorker extends SwingWorker<Void, UserInterfaceData> {
 
         ui.setAuxMessage(datum.msgAux);
         ui.setMainMessage(datum.msgMain);
+        ui.setAuxLabel(datum.labelAuxMsg);
         ui.setHoldLed(datum.ledHold);
+        ui.setHeaterLed(datum.ledHeater);
+        ui.setCoolerLed(datum.ledCooler);
     }
 }

@@ -32,39 +32,62 @@ package houseSimulation;
 
 import TranRunJLite.*;
 
-/**
- *
- * @author bill
+/** The thermal simulation system.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class ThermalSys extends TrjSys implements HouseIO {
 
     String name;
     private ThermalTask therm;
 
+    /** construct the thermal simulation
+     * 
+     * @param name -- name of the simulation
+     * @param tm -- time structure to be used
+     */
     public ThermalSys(String name, TrjTime tm) {
         super(tm);
-
         this.name = name;
-
         therm = new ThermalTask("Thermal Task", this, 1.0);
     }
 
+    /** get inside temperature
+     * 
+     * @return
+     */
     public double getTempInside() {
         return therm.getTin();
     }
 
+    /** get heater state
+     *
+     * @return heater on state
+     */
     public boolean getHeaterOnState() {
         return therm.getHeaterOn();
     }
 
+    /** set the heater on state
+     * 
+     * @param state
+     */
     public void setHeaterOnState(boolean state) {
         therm.setHeaterOn(state);
     }
 
+    /** get the cooler state
+     *
+     * @return
+     */
     public boolean getCoolerOnState() {
         return therm.getCoolerOn();
     }
 
+    /** set the cooler state
+     * 
+     * @param state
+     */
     public void setCoolerOnState(boolean state) {
         therm.setCoolerOn(state);
     }

@@ -27,7 +27,6 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package thermostat;
 
 import houseSimulation.HouseIO;
@@ -39,15 +38,15 @@ import TranRunJLite.*;
  *  1 : Hysteresis State -- Provide setpoint following using Hysteresis Control
  *  2 : Linear State -- Provide setpoint following using linear control w/ PWM
  *
- * @author WJBurke
+ * @author William Burke <billstron@gmail.com>
  */
 public class ControlTask extends TrjTask {
 
-    double dt; // how often to run
+    private double dt; // how often to run
+    private double tNext = 0;  // next time to run the task
     boolean heaterControl; // is it controlling the heater?
     ControlType type; // what type of control to return (hysteresis, linear)
     boolean controlOn; // used to turn control on and off
-    double tNext = 0;  // next time to run the task
     ControlStateOff stateOff;
     ControlStateHysteresis stateHyst;
     ControlStateLinear stateLin;
@@ -56,6 +55,14 @@ public class ControlTask extends TrjTask {
     double Tin = 0;
     double Tsp = 75;
 
+    /** Construct the control task
+     * 
+     * @param name
+     * @param sys
+     * @param HeaterControl -- Defines heater/cooler control (True = heater)
+     * @param house -- The house to control
+     * @param dt
+     */
     public ControlTask(
             String name,
             TrjSys sys,
@@ -114,52 +121,100 @@ public class ControlTask extends TrjTask {
                     break;
             }
             tNext += dt;  // update the state machine timer.
+        } else {
+            if (runEntry) {
+                nextState = currentState;
+            }
         }
         return false;
     }
 
+    /** Tell wether this controller operates a heater or cooler.
+     * 
+     * @return
+     */
     boolean getHeaterControl() {
         return this.heaterControl;
     }
 
+    /** Returns the house that is being controlled. 
+     * 
+     * @return
+     */
     HouseIO getHouse() {
         return this.house;
     }
 
+    /** Gets the inside temperature.
+     * 
+     * @return
+     */
     double getTin() {
         Tin = house.getTempInside();
         return Tin;
     }
 
+    /** Gets the setpoint temprature.
+     * 
+     * @return
+     */
     double getTsp() {
         //Tsp = 75;
         return Tsp;
     }
 
-    void setTsp(double Tsp){
+    /** Sets the setpoint temperature
+     * 
+     * @param Tsp
+     */
+    void setTsp(double Tsp) {
         this.Tsp = Tsp;
     }
 
+    /** Gets the current type of control that is being used.
+     * 
+     * @return
+     */
     ControlType getControlType() {
         return type;
     }
 
-    void setControlType(ControlType mode){
+    /** Sets the type of control to be used.
+     * 
+     * @param mode
+     */
+    void setControlType(ControlType mode) {
         type = mode;
     }
 
-    boolean getControlOn(){
+    /** Gets the on-state of the controller.
+     * 
+     * @return
+     */
+    boolean getControlOn() {
         return controlOn;
     }
 
-    void setControlOn(boolean state){
+    /** Sets the on-state of the controller.
+     * 
+     * @param state
+     */
+    void setControlOn(boolean state) {
         controlOn = state;
     }
 
-    boolean getUnitOn() {
+    /** Returns the unit on-state.
+     *
+     * @return
+     */
+    boolean isUnitOn() {
         return unitOn;
     }
 
+    /** Sets the unit on state.
+     * 
+     * @param state
+     */
     void setUnitOn(boolean state) {
         if (heaterControl) {
             house.setHeaterOnState(state);

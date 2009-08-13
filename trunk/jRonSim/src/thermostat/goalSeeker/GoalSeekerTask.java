@@ -28,86 +28,79 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package thermostat;
+package thermostat.goalSeeker;
 
+import thermostat.*;
 import TranRunJLite.*;
 import java.util.ArrayList;
 
-/**
- *
- * @author bill
+/** The Goal Seeker Task coordinates and implements all of the higher functions
+ * of the intelligent thermostat.  It takes in infomation from helper tasks, and
+ * decides what to do with it.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class GoalSeekerTask extends TrjTask {
 
     private SupervisorTask supervisor = null;
     private CoordinatorTask coordinator = null;
+    private UserInterfaceTask ui = null;
     private ArrayList<GoalSeekerState> states = new ArrayList<GoalSeekerState>();
-    private double Tin;
-    private double Tsp;
-    private double TspSupervisor;
-    private double TspUserInterface;
-    private boolean newSp;
-    private boolean holdOn;
     private double tNext;
     private double dt;
+    double Tin;
+    double Tsp;
+    double TspMod;
+    boolean newSp;
+    boolean holdOn;
+    boolean override;
+    boolean heaterOn;
+    boolean coolerOn;
+    ThermostatMode uiMode = ThermostatMode.COOLING;
+    ThermostatMode tstatMode = ThermostatMode.COOLING;
 
-    GoalSeekerTask(String name, TrjSys sys,
+    /** Construct the Goal Seeker Task.
+     * 
+     * @param name
+     * @param sys
+     * @param supervisor -- supervisor task
+     * @param coordinator -- coordinator task
+     * @param ui -- user interface task.  
+     * @param dt
+     */
+    public GoalSeekerTask(String name, TrjSys sys,
             SupervisorTask supervisor,
             CoordinatorTask coordinator,
+            UserInterfaceTask ui,
             double dt) {
         super(name, sys, 0 /*initial state*/, true /*start active*/);
 
         // add the states
         GoalSeekerStateNormal normal = new GoalSeekerStateNormal("Normal State",
-                this, supervisor, coordinator);
+                this, supervisor, coordinator, ui);
         states.add(normal);
         stateNames.add("Normal State");
 
         // initialize the variables
         this.supervisor = supervisor;
         this.coordinator = coordinator;
+        this.ui = ui;
         this.Tin = 75;
         this.Tsp = 75;
-        this.TspSupervisor = this.Tsp;
-        this.TspUserInterface = this.Tsp;
         this.newSp = false;
         this.dt = dt;
         this.tNext = 0;
     }
-    final int normalState  = 0;
+    /** State definitions.
+     * 
+     */
+    final int normalState = 0;
 
-    public double getTin(){
-        return Tin;
-    }
-
-    public double getTsp(){
-        return Tsp;
-    }
-
-    void setTin(double Tin){
-        this.Tin = Tin;
-    }
-
-    void setTsp(double Tsp){
-        this.Tsp = Tsp;
-    }
-
-    boolean isNewSp(){
-        return this.newSp;
-    }
-    void setNewSp(boolean flag){
-        this.newSp = flag;
-    }
-
-    boolean isHoldOn(){
-        return holdOn;
-    }
-
-    void setHoldOn(boolean flag){
-        holdOn = flag;
-    }
-
-
+    /** Run the Goal Seeker Task.
+     * 
+     * @param sys
+     * @return
+     */
     @Override
     public boolean RunTask(TrjSys sys) {
         // get the current runtime
@@ -120,6 +113,10 @@ public class GoalSeekerTask extends TrjTask {
             states.get(this.currentState).sendData();
             // update the timing variable.  
             tNext += dt;
+        } else {
+            if (runEntry) {
+                nextState = currentState;
+            }
         }
         return false;
     }

@@ -31,17 +31,30 @@
 
 package userInterface;
 
-/**
- *
- * @author bill
+/** Container for all of the dynamic data that goes into the thermosat GUI.
+ * 
+ * @author William Burke <billstron@gmail.com>
  */
 public class UserInterfaceData {
-    final String msgAux, msgMain;
-    final boolean ledHold;
+    final String msgAux, msgMain, labelAuxMsg;
+    final boolean ledHold, ledHeater, ledCooler;
 
-    public UserInterfaceData(String msgAux, String msgMain, boolean ledHold){
+    /** Concstruct a UserInterfaceData object.
+     * 
+     * @param msgAux
+     * @param msgMain
+     * @param labelAuxMsg
+     * @param ledHold
+     * @param ledHeater
+     * @param ledCooler
+     */
+    public UserInterfaceData(String msgAux, String msgMain, String labelAuxMsg,
+            boolean ledHold, boolean ledHeater, boolean ledCooler){
         this.msgAux = msgAux;
+        this.labelAuxMsg = labelAuxMsg;
         this.msgMain = msgMain;
         this.ledHold = ledHold;
+        this.ledHeater = ledHeater;
+        this.ledCooler = ledCooler;
     }
 }

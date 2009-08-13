@@ -35,10 +35,24 @@ package houseSimulation;
  * simulation or real house that wants to interface the thermostat must
  * implement this.  
  *
- * @author WJBurke 7/20/2009
+ * @author William Burke <billstron@gmail.com> 7/20/2009
  */
 public interface HouseIO {
+    /** gets the inside temperatures
+     *
+     * @return inside temperature
+     */
+    
     public double getTempInside();
+    /** sets the heater on or off.
+     *
+     * @param state -- on = true, off = false
+     */
     public void setHeaterOnState(boolean state);
+
+    /** sets the cooler on or off.
+     *
+     * @param state -- on = true, off = false
+     */
     public void setCoolerOnState(boolean state);
 }

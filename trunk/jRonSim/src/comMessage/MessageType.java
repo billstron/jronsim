@@ -29,45 +29,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package thermostat;
+package comMessage;
 
-import TranRunJLite.TrjSys;
-import TranRunJLite.TrjTask;
-
-/** This task manages communications for the thermostat.
+/**This specifies the types of messages that can be passed between the agents.
  *
  * @author William Burke <billstron@gmail.com>
  */
-public class ComTask extends TrjTask {
-
-    private double dt;
-    private double tNext;
-
-    /** Construct the communications task.
-     * 
-     * @param name
-     * @param sys
-     * @param dt
-     */
-    public ComTask(String name, TrjSys sys, double dt){
-        super(name, sys, 0, true);
-        this.dt = dt;
-        this.tNext = 0;
-    }
-
-    /** Run the communications task.
-     * 
-     * @param sys
-     * @return
-     */
-    @Override
-    public boolean RunTask(TrjSys sys) {
-        double t = sys.GetRunningTime();
-        if( t >= tNext){
-            // do something
-            // update the next timer
-            tNext += dt;
-        }
-        return false;
-    }
+public enum MessageType {
+    INFO, DR_SETPOINT, DR_COSTRATIO, DR_RELIABILITY
 }

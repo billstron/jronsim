@@ -28,46 +28,61 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package thermostat.goalSeeker;
 
-package thermostat;
+import thermostat.*;
 
-import TranRunJLite.TrjSys;
-import TranRunJLite.TrjTask;
-
-/** This task manages communications for the thermostat.
- *
+/** The Normal State for the Goal Seeker.  This state is active when there is no
+ * DR or load management events currently in effect.  
+ * 
  * @author William Burke <billstron@gmail.com>
  */
-public class ComTask extends TrjTask {
+class GoalSeekerStateNormal extends GoalSeekerState {
 
-    private double dt;
-    private double tNext;
-
-    /** Construct the communications task.
-     * 
-     * @param name
-     * @param sys
-     * @param dt
-     */
-    public ComTask(String name, TrjSys sys, double dt){
-        super(name, sys, 0, true);
-        this.dt = dt;
-        this.tNext = 0;
+    GoalSeekerStateNormal(String name, GoalSeekerTask task,
+            SupervisorTask sup, CoordinatorTask coord, UserInterfaceTask ui) {
+        super(name, task, sup, coord, ui);
     }
 
-    /** Run the communications task.
+    /** Entry function.
      * 
-     * @param sys
+     * @param t
+     */
+    @Override
+    protected void entryFunction(double t) {
+        // nothing
+    }
+
+    /** Action function.
+     * 
+     * @param t
+     */
+    @Override
+    protected void actionFunction(double t) {
+        // check if there is a new setpoint
+        if (task.newSp) {
+            task.Tsp = sup.getSetpoint();
+            System.out.println("Updated setpoint: " + task.Tsp);
+        }
+        // Adjust the thermostat mode based on the ui
+        task.tstatMode = task.uiMode;
+        // check to see if there is a setpoint change coming from the user
+        // interface.  If so, send it to the supervisor and reset
+        if (task.TspMod != 0.0) {
+            System.out.println("Send TspMod to the supervisor");
+            sup.setSetpoint(task.Tsp + task.TspMod);
+            task.TspMod = 0;
+        }
+
+    }
+
+    /** Exit function.
+     * 
+     * @param t
      * @return
      */
     @Override
-    public boolean RunTask(TrjSys sys) {
-        double t = sys.GetRunningTime();
-        if( t >= tNext){
-            // do something
-            // update the next timer
-            tNext += dt;
-        }
-        return false;
+    protected int exitFunction(double t) {
+        return -1;
     }
 }
