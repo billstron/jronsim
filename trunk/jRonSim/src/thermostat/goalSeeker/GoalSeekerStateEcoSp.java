@@ -47,7 +47,6 @@ class GoalSeekerStateEcoSp extends TrjState {
     private UserInterfaceTask ui;
     private ComTask com;
     private double tDrEnd;
-    private double TspDrMod;
     private boolean drOverride;
 
     /** Constructs the Goal Seeker Normal State.
@@ -133,13 +132,14 @@ class GoalSeekerStateEcoSp extends TrjState {
     @Override
     protected void entryFunction(double t) {
         // parse the message
-        TspDrMod = getMsgTspDrMod(task.nextMsg);
+        task.TspDrMod = getMsgTspDrMod(task.nextMsg);
         tDrEnd = getMsgEndTime(task.nextMsg);
-        
-        // signal the supervisor based on the message
+
+        // signal the supervisor to move to table mode.
         sup.setHoldOn(false);
-        sup.clearSetpointMod();
-        sup.modSetpoint(TspDrMod);
+
+        // reset the setpoint modification.
+        task.TspMod = 0;
 
         // reset the message.  
         task.nextMsg = null;
@@ -161,9 +161,8 @@ class GoalSeekerStateEcoSp extends TrjState {
 
         // If there is a new setpoint from the supervisor, get it.
         if (sup.isNewSetpoint()) {
-            task.Tsp = sup.getSetpoint() + TspDrMod;
-            coord.setTsp(task.Tsp);
-            ui.setTsp(task.Tsp);
+            task.TspTable = sup.getSetpoint();
+            // Do not reset the setpoint modification
         }
 
         // Adjust the thermostat mode based on the ui
@@ -171,21 +170,13 @@ class GoalSeekerStateEcoSp extends TrjState {
 
         // check to see if there is a setpoint change coming from the user
         task.TspMod = ui.getTspMod();
-        // If they want a change that causes more energy consupmtion, 
-        if ((task.TspMod < 0.0 &&
-                task.tstatMode == ThermostatMode.COOLING) ||
-                (task.TspMod > 0.0 &&
-                task.tstatMode == ThermostatMode.HEATING)) {
-            // check the override flag, and give it to them.
-            if (drOverride) {
-                sup.modSetpoint(task.TspMod);
-            }
-        } // if it calls for less energy, then give it to them.  
-        else {
-            sup.modSetpoint(task.TspMod);
+        // If they want a change that causes more energy consupmtion,
+        // and they haven't overridden yet, don't let them have it.  
+        if (Math.signum(task.TspDrMod) * task.TspMod < 0 && !drOverride) {
+            task.TspMod = 0;
         }
-        // Regardless, reset the Setpoint modification.
-        task.TspMod = 0;
+        // Calculate the new setp0int
+        task.Tsp = task.TspTable + task.TspDrMod + task.TspMod;
 
         // if we aren't waiting on any message and the buffer isn't empty, 
         // then get the oldest message, and process it. 
@@ -197,6 +188,9 @@ class GoalSeekerStateEcoSp extends TrjState {
         // always set the hold to false.
         task.holdOn = false;
 
+        // propogate the setpoint temp.
+        ui.setTsp(task.Tsp);
+        coord.setTsp(task.Tsp);
         // propogate the inside temp
         ui.setTin(task.Tin);
         // progogate the hold state;
