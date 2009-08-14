@@ -42,10 +42,8 @@ public class SupervisorTask extends TrjTask {
     private double tNext;
     private SupervisorMode mode;
     private SetpointTable table;
-    private boolean override;
     private double Tsp;
     private double TspTable;
-    private double TspMod;
     private boolean newSp;
 
     /** Constructs the supervisor task.
@@ -60,21 +58,17 @@ public class SupervisorTask extends TrjTask {
 
         stateNames.add("Hold State");
         stateNames.add("Tables State");
-        stateNames.add("Override State");
 
         this.table = new SetpointTable();
         this.TspTable = table.getTsp(sys.GetCalendar());
         this.Tsp = this.TspTable;
-        this.TspMod = 0;
-        this.newSp = false;
+        this.newSp = true;
         this.mode = SupervisorMode.TABLES;
-        this.override = false;
         this.dt = dt;
         this.tNext = 0;
     }
     private final int sHold = 0;
     private final int sTables = 1;
-    private final int sOverride = 2;
 
     /** Indicates if the current setpoint is new.
      * 
@@ -92,24 +86,6 @@ public class SupervisorTask extends TrjTask {
     public double getSetpoint() {
         this.newSp = false;
         return this.Tsp;
-    }
-
-    /** Modify the current setpoint, overriding the current value.
-     * 
-     * @param Tsp
-     */
-    public void modSetpoint(double TspMod) {
-        //System.out.println("Supervisor, Accept TspMod");
-        this.override = true;
-        this.TspMod += TspMod;
-    }
-
-    /** Clears the current setpoint modification that hasn't been implemented
-     * yet.  
-     */
-    public void clearSetpointMod(){
-        this.override = false;
-        this.TspMod = 0;
     }
 
     /** Tells if the hold state is currently active.
@@ -147,17 +123,10 @@ public class SupervisorTask extends TrjTask {
             //System.out.println("supervisor state: " + this.currentState);
             switch (this.currentState) {
                 case sHold:  // no setpoint changes.
-                    // Upon entry, always indicate a new setpoint
+                    // Upon entry, don't indicate a new setpoint
                     if (this.runEntry) {
                         //System.out.println("SupervisorState: sHold");
-                        newSp = true;
-                    }
-                    // If the override is true, adjust the setpoint and 
-                    // reset the override flag and set the new flag
-                    if (override == true) {
-                        Tsp += TspMod;
-                        clearSetpointMod();
-                        newSp = true;
+                        //newSp = false;
                     }
                     // Determine the state transition based on the mode variable
                     this.nextState = -1;
@@ -169,7 +138,7 @@ public class SupervisorTask extends TrjTask {
                     // Upon entry, always indicate a new setpoint
                     if (this.runEntry) {
                         //System.out.println("SupervisorState: sTables");
-                        newSp = true;
+                        //newSp = true;
                     }
                     // Get the new setpoint and compare it to the old one.
                     // if the setpoint changed, indicate as such.
@@ -183,47 +152,15 @@ public class SupervisorTask extends TrjTask {
                     this.nextState = -1;
                     if (mode != SupervisorMode.TABLES) {
                         this.nextState = sHold;
-                    } else if (override == true) {
-                        //System.out.println("override");
-                        this.nextState = sOverride;
                     }
                     break;
-                case sOverride:
-                    //System.out.println("run entry: " + this.runEntry);
-                    //System.exit(1);
-                    //System.out.println("SupervisorState: sOverride");
-                    // upon entry, always indicate that there is a new setpoint
-                    if (this.runEntry || override) {
-                        //System.out.println("SupervisorState: sOverride");
-                        newSp = true;
-                        // change the setpoint and reset the flag
-                        Tsp += TspMod;
-                        clearSetpointMod();
-                    }
-
-                    //Tsp = TspOverride;
-                    //override = false;
-                    // determine the state transition:
-                    // based on a change in the setpoint table
-                    double TspTableNew = table.getTsp(sys.GetCalendar());
-                    if (TspTable != TspTableNew) {
-                        //override = false;  // reset the override flag
-                        this.nextState = sTables;
-                    }
-                    // based on a change in mode
-                    if (mode != SupervisorMode.TABLES) {
-                        // DO NOT reset the override flag.
-                        this.nextState = sHold;
-                    }
-                    break;
-            }
+            } // case
             // update the timing variable
             tNext += dt;
         } else {
             if (runEntry) {
                 nextState = currentState;
             }
-
         }
         return false;
     }
