@@ -90,7 +90,20 @@ class GoalSeekerStateNormal extends TrjState {
      */
     @Override
     protected void entryFunction(double t) {
-        // nothing yet
+        // reset the setpoint modifications based on how far the mod went.
+
+        double TspModTotal = Math.signum(task.TspDrMod) * (task.TspDrMod -
+                task.TspMod);
+        // If the modified setpoint was 'more comfortable than' the normal
+        // setpoint, keep it at the same setpoint temp.
+        if(TspModTotal < 0){
+            task.TspMod = task.TspDrMod - task.TspMod;
+        }
+        // Otherwise, reset the setpoint to the table value.  
+        else {
+            task.TspMod = 0;
+        }
+        task.TspDrMod = 0;
     }
 
     /** Action function.
@@ -106,26 +119,21 @@ class GoalSeekerStateNormal extends TrjState {
         task.coolerOn = coord.isCoolerOn();
         // get the user interface data
         task.holdOn = ui.getHoldToggle();
-        task.TspMod = ui.getTspMod();
+        // Add the ui setpoint modification to the current value.  
+        task.TspMod += ui.getTspMod();
         
-        // If there is a new setpoint from the supervisro, get it.
+        // If there is a new setpoint from the supervisor, get it and reset the
+        // current setpoint modification.
         if (sup.isNewSetpoint()) {
-            task.Tsp = sup.getSetpoint();
-            coord.setTsp(task.Tsp);
-            ui.setTsp(task.Tsp);
+            task.TspTable = sup.getSetpoint();
+            task.TspMod = 0;
             //System.out.println("Updated setpoint: " + task.Tsp);
         }
+        // Create the current setpoint
+        task.Tsp = task.TspTable + task.TspMod;
         
         // Adjust the thermostat mode based on the ui
         task.tstatMode = ui.getThermostatMode();
-        
-        // check to see if there is a setpoint change coming from the user
-        // interface.  If so, send it to the supervisor and reset
-        if (task.TspMod != 0.0) {
-            //System.out.println("Send TspMod to the supervisor");
-            sup.modSetpoint(task.TspMod);
-            task.TspMod = 0;
-        }
         
         // if we aren't waiting on any message and the buffer isn't empty, 
         // then get the oldest message, and process it. 
@@ -133,7 +141,10 @@ class GoalSeekerStateNormal extends TrjState {
             task.nextMsg = com.getRxMsgOldest();
             this.processMsg(task.nextMsg);
         }
-        
+
+        // propogate the setpoint temp.
+        ui.setTsp(task.Tsp);
+        coord.setTsp(task.Tsp);
         // propogate the inside temp
         ui.setTin(task.Tin);
         // progogate the hold state;

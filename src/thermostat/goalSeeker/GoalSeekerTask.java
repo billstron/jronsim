@@ -48,10 +48,12 @@ public class GoalSeekerTask extends TrjTask {
     private double dt;
     double Tin;
     double Tsp;
+    double TspTable;
     double TspMod;
+    double TspDrMod;
     boolean newSp;
     boolean holdOn;
-    boolean override;
+    boolean overrideOn;
     boolean heaterOn;
     boolean coolerOn;
     int rxBufferSize = 0;
