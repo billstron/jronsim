@@ -28,11 +28,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package thermostat;
 
 import TranRunJLite.TrjSys;
 import TranRunJLite.TrjTask;
+import comMessage.Message;
+import java.util.ArrayList;
 
 /** This task manages communications for the thermostat.
  *
@@ -42,6 +43,8 @@ public class ComTask extends TrjTask {
 
     private double dt;
     private double tNext;
+    private ArrayList<Message> rxBuffer = new ArrayList<Message>();
+    private ArrayList<Message> txQueue = new ArrayList<Message>();
 
     /** Construct the communications task.
      * 
@@ -49,10 +52,56 @@ public class ComTask extends TrjTask {
      * @param sys
      * @param dt
      */
-    public ComTask(String name, TrjSys sys, double dt){
+    public ComTask(String name, TrjSys sys, double dt) {
         super(name, sys, 0, true);
         this.dt = dt;
         this.tNext = 0;
+    }
+
+    /** Get the most recent message and remove it from the buffer.
+     * 
+     * @return
+     */
+    public Message getRxMsgLatest() {
+        Message latest = null;
+        if (rxBuffer.size() > 0) {
+            int k = rxBuffer.size() - 1;
+            latest = rxBuffer.get(k);
+            rxBuffer.remove(k);
+        }
+
+        return latest;
+    }
+
+    /** Get the oldest message, remove it from the buffer, and shift the others
+     * up to fill in its place.
+     * 
+     * @return
+     */
+    public Message getRxMsgOldest() {
+        Message oldest = null;
+        if (rxBuffer.size() > 0) {
+            int k = 0;
+            oldest = rxBuffer.get(k);
+            rxBuffer.remove(k);
+        }
+        return oldest;
+    }    
+
+    /** Get the current number of messages in the message buffer.
+     * 
+     * @return
+     */
+    public int getRxMsgBufferSize(){
+        return rxBuffer.size();
+    }
+
+    /** Enque new message for transmission.
+     *
+     * @param tx
+     */
+    public void enqueTxMsg(Message tx){
+        txQueue.add(tx);
     }
 
     /** Run the communications task.
@@ -63,10 +112,18 @@ public class ComTask extends TrjTask {
     @Override
     public boolean RunTask(TrjSys sys) {
         double t = sys.GetRunningTime();
-        if( t >= tNext){
-            // do something
+        if (t >= tNext) {
+            // send all of the messages in the tx Queue
+            while(txQueue.size() > 0){
+                // TODO: send the message
+                txQueue.remove(0);
+            }
             // update the next timer
             tNext += dt;
+        } else {
+            if (runEntry) {
+                nextState = currentState;
+            }
         }
         return false;
     }

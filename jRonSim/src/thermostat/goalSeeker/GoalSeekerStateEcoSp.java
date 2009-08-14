@@ -34,18 +34,21 @@ import TranRunJLite.*;
 import comMessage.*;
 import thermostat.*;
 
-/** The Normal State for the Goal Seeker.  This state is active when there is no
- * DR or load management events currently in effect.  
+/** The Economic Setpoint State for the Goal Seeker.  This state is active
+ * when an Economic DR event with Setpoint control is active.  
  * 
  * @author William Burke <billstron@gmail.com>
  */
-class GoalSeekerStateNormal extends TrjState {
+class GoalSeekerStateEcoSp extends TrjState {
 
     private GoalSeekerTask task;
     private SupervisorTask sup;
     private CoordinatorTask coord;
     private UserInterfaceTask ui;
     private ComTask com;
+    private double tDrEnd;
+    private double TspDrMod;
+    private boolean drOverride;
 
     /** Constructs the Goal Seeker Normal State.
      * 
@@ -56,11 +59,11 @@ class GoalSeekerStateNormal extends TrjState {
      * @param ui
      * @param com
      */
-    GoalSeekerStateNormal(String name, GoalSeekerTask task,
+    GoalSeekerStateEcoSp(String name, GoalSeekerTask task,
             SupervisorTask sup, CoordinatorTask coord, UserInterfaceTask ui,
             ComTask com) {
         super(name, task);
-        
+
         this.task = task;
         this.sup = sup;
         this.coord = coord;
@@ -72,9 +75,9 @@ class GoalSeekerStateNormal extends TrjState {
      * 
      * @param msg
      */
-    private void processMsg(Message msg){
-        if(msg != null){
-            switch(msg.getType()){
+    private void processMsg(Message msg) {
+        if (msg != null) {
+            switch (msg.getType()) {
                 case INFO:
                 case DR_SETPOINT:
                 case DR_COSTRATIO:
@@ -84,13 +87,62 @@ class GoalSeekerStateNormal extends TrjState {
         } // if
     }
 
+    /** Get the end time from the message.
+     * 
+     * @param msg
+     * @return
+     */
+    private double getMsgEndTime(Message msg) {
+        double tEnd = 0;
+        if (msg != null) {
+            switch (msg.getType()) {
+                case DR_SETPOINT:
+                    tEnd = 0;
+                    break;
+                case INFO:
+                case DR_COSTRATIO:
+                case DR_RELIABILITY:
+                    tEnd = 0;
+                    break;
+            } // switch
+        } // if
+        return tEnd;
+    }
+
+    private double getMsgTspDrMod(Message msg) {
+        double mod = 0;
+        if (msg != null) {
+            switch (msg.getType()) {
+                case DR_SETPOINT:
+                    mod = 4;
+                    break;
+                case INFO:
+                case DR_COSTRATIO:
+                case DR_RELIABILITY:
+                    mod = 0;
+                    break;
+            } // switch
+        } // if
+        return mod;
+    }
+
     /** Entry function.
      * 
      * @param t
      */
     @Override
     protected void entryFunction(double t) {
-        // nothing yet
+        // parse the message
+        TspDrMod = getMsgTspDrMod(task.nextMsg);
+        tDrEnd = getMsgEndTime(task.nextMsg);
+        
+        // signal the supervisor based on the message
+        sup.setHoldOn(false);
+        sup.clearSetpointMod();
+        sup.modSetpoint(TspDrMod);
+
+        // reset the message.  
+        task.nextMsg = null;
     }
 
     /** Action function.
@@ -99,41 +151,52 @@ class GoalSeekerStateNormal extends TrjState {
      */
     @Override
     protected void actionFunction(double t) {
-        
+
         // get the coordinator data.
         task.Tin = coord.getTin();
         task.heaterOn = coord.isHeaterOn();
         task.coolerOn = coord.isCoolerOn();
         // get the user interface data
-        task.holdOn = ui.getHoldToggle();
-        task.TspMod = ui.getTspMod();
-        
-        // If there is a new setpoint from the supervisro, get it.
+        drOverride = ui.isDrOverriden();
+
+        // If there is a new setpoint from the supervisor, get it.
         if (sup.isNewSetpoint()) {
-            task.Tsp = sup.getSetpoint();
+            task.Tsp = sup.getSetpoint() + TspDrMod;
             coord.setTsp(task.Tsp);
             ui.setTsp(task.Tsp);
-            //System.out.println("Updated setpoint: " + task.Tsp);
         }
-        
+
         // Adjust the thermostat mode based on the ui
         task.tstatMode = ui.getThermostatMode();
-        
+
         // check to see if there is a setpoint change coming from the user
-        // interface.  If so, send it to the supervisor and reset
-        if (task.TspMod != 0.0) {
-            //System.out.println("Send TspMod to the supervisor");
+        task.TspMod = ui.getTspMod();
+        // If they want a change that causes more energy consupmtion, 
+        if ((task.TspMod < 0.0 &&
+                task.tstatMode == ThermostatMode.COOLING) ||
+                (task.TspMod > 0.0 &&
+                task.tstatMode == ThermostatMode.HEATING)) {
+            // check the override flag, and give it to them.
+            if (drOverride) {
+                sup.modSetpoint(task.TspMod);
+            }
+        } // if it calls for less energy, then give it to them.  
+        else {
             sup.modSetpoint(task.TspMod);
-            task.TspMod = 0;
         }
-        
+        // Regardless, reset the Setpoint modification.
+        task.TspMod = 0;
+
         // if we aren't waiting on any message and the buffer isn't empty, 
         // then get the oldest message, and process it. 
-        if(task.nextMsg == null && com.getRxMsgBufferSize() > 0){
+        if (task.nextMsg == null && com.getRxMsgBufferSize() > 0) {
             task.nextMsg = com.getRxMsgOldest();
-            this.processMsg(task.nextMsg);
+            processMsg(task.nextMsg);
         }
-        
+
+        // always set the hold to false.
+        task.holdOn = false;
+
         // propogate the inside temp
         ui.setTin(task.Tin);
         // progogate the hold state;
@@ -154,7 +217,10 @@ class GoalSeekerStateNormal extends TrjState {
     @Override
     protected int exitFunction(double t) {
 
-        // decide on transitions based on the next message
-        return task.nextTransition(task.nextMsg);
+        int next = -1;
+        if (t >= tDrEnd) {
+            next = task.normalState;
+        }
+        return next;
     }
 }

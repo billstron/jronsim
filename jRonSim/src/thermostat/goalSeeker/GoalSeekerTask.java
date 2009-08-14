@@ -32,6 +32,7 @@ package thermostat.goalSeeker;
 
 import thermostat.*;
 import TranRunJLite.*;
+import comMessage.Message;
 import java.util.ArrayList;
 
 /** The Goal Seeker Task coordinates and implements all of the higher functions
@@ -42,10 +43,7 @@ import java.util.ArrayList;
  */
 public class GoalSeekerTask extends TrjTask {
 
-    private SupervisorTask supervisor = null;
-    private CoordinatorTask coordinator = null;
-    private UserInterfaceTask ui = null;
-    private ArrayList<GoalSeekerState> states = new ArrayList<GoalSeekerState>();
+    private ArrayList<TrjState> states = new ArrayList<TrjState>();
     private double tNext;
     private double dt;
     double Tin;
@@ -56,6 +54,8 @@ public class GoalSeekerTask extends TrjTask {
     boolean override;
     boolean heaterOn;
     boolean coolerOn;
+    int rxBufferSize = 0;
+    Message nextMsg = null;
     ThermostatMode uiMode = ThermostatMode.COOLING;
     ThermostatMode tstatMode = ThermostatMode.COOLING;
 
@@ -72,19 +72,17 @@ public class GoalSeekerTask extends TrjTask {
             SupervisorTask supervisor,
             CoordinatorTask coordinator,
             UserInterfaceTask ui,
+            ComTask com,
             double dt) {
         super(name, sys, 0 /*initial state*/, true /*start active*/);
 
         // add the states
         GoalSeekerStateNormal normal = new GoalSeekerStateNormal("Normal State",
-                this, supervisor, coordinator, ui);
+                this, supervisor, coordinator, ui, com);
         states.add(normal);
         stateNames.add("Normal State");
 
         // initialize the variables
-        this.supervisor = supervisor;
-        this.coordinator = coordinator;
-        this.ui = ui;
         this.Tin = 75;
         this.Tsp = 75;
         this.newSp = false;
@@ -95,22 +93,42 @@ public class GoalSeekerTask extends TrjTask {
      * 
      */
     final int normalState = 0;
+    final int ecoSpState = 1;
+
+    /** Calculates the next transition based on a message.
+     * 
+     * @param msg
+     * @return
+     */
+    int nextTransition(Message msg) {
+        int next = -1; // default is no transition.
+        if (msg != null) {
+            switch (msg.getType()) {
+                case INFO:
+                    break;
+                case DR_SETPOINT:
+                    break;
+                case DR_COSTRATIO:
+                    break;
+                case DR_RELIABILITY:
+                    break;
+            }
+        }
+        return next;
+    }
 
     /** Run the Goal Seeker Task.
      * 
      * @param sys
      * @return
      */
-    @Override
     public boolean RunTask(TrjSys sys) {
         // get the current runtime
         double t = sys.GetRunningTime();
         // run if the time is right
         if (t >= tNext) {
             // run the state defined by the tran run system
-            states.get(this.currentState).getData();
             states.get(this.currentState).run(t);
-            states.get(this.currentState).sendData();
             // update the timing variable.  
             tNext += dt;
         } else {
