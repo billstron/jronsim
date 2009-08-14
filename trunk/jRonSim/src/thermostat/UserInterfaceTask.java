@@ -236,6 +236,14 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
         return tstatMode;
     }
 
+    /** Get the state of the override flag
+     * 
+     * @return
+     */
+    public boolean isDrOverriden() {
+        return false;
+    }
+
     /** Run the User Interface Task.
      * 
      * @param sys

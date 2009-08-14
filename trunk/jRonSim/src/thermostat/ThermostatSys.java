@@ -47,8 +47,10 @@ public class ThermostatSys extends TrjSys {
     private final ControlTask coolerContTask;
     private final CoordinatorTask coordinator;
     private final SupervisorTask supervisor;
-    private final GoalSeekerTask goalSeeker;
     private final UserInterfaceTask userInterface;
+    private final ComTask com;
+    private final GoalSeekerTask goalSeeker;
+    
 
     /** Construct the Thermostat System.
      * 
@@ -72,13 +74,14 @@ public class ThermostatSys extends TrjSys {
 
         supervisor = new SupervisorTask("Supervisor Task", this,
                 5.0);
-        //supervisor.SetStateTracking(true);
 
         userInterface = new UserInterfaceTask("User Interface Task", this,
                 0.5);
+        
+        com = new ComTask("Communications Task", this, 1.0);
 
         goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
-                supervisor, coordinator, userInterface, 5.0);
+                supervisor, coordinator, userInterface, com, 5.0);
     }
 
     /** Construct the Thermostat System with a GUI.
@@ -107,9 +110,11 @@ public class ThermostatSys extends TrjSys {
 
         userInterface = new UserInterfaceTask("User Interface Task", this,
                 0.5);
+
+        com = new ComTask("Communications Task", this, 1.0);
         
         goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
-                supervisor, coordinator, userInterface, 5.0);
+                supervisor, coordinator, userInterface, com, 5.0);
 
         if (uiFlag) {
             UserInterfaceJFrame gui = new UserInterfaceJFrame(userInterface);

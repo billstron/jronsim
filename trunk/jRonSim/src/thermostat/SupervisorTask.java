@@ -45,7 +45,7 @@ public class SupervisorTask extends TrjTask {
     private boolean override;
     private double Tsp;
     private double TspTable;
-    private double TspOverride;
+    private double TspMod;
     private boolean newSp;
 
     /** Constructs the supervisor task.
@@ -65,7 +65,7 @@ public class SupervisorTask extends TrjTask {
         this.table = new SetpointTable();
         this.TspTable = table.getTsp(sys.GetCalendar());
         this.Tsp = this.TspTable;
-        this.TspOverride = this.Tsp;
+        this.TspMod = 0;
         this.newSp = false;
         this.mode = SupervisorMode.TABLES;
         this.override = false;
@@ -94,14 +94,22 @@ public class SupervisorTask extends TrjTask {
         return this.Tsp;
     }
 
-    /** Sets the current setpoint, overriding the current value.
+    /** Modify the current setpoint, overriding the current value.
      * 
      * @param Tsp
      */
-    public void setSetpoint(double Tsp) {
+    public void modSetpoint(double TspMod) {
         //System.out.println("Supervisor, Accept TspMod");
         this.override = true;
-        this.TspOverride = Tsp;
+        this.TspMod += TspMod;
+    }
+
+    /** Clears the current setpoint modification that hasn't been implemented
+     * yet.  
+     */
+    public void clearSetpointMod(){
+        this.override = false;
+        this.TspMod = 0;
     }
 
     /** Tells if the hold state is currently active.
@@ -141,14 +149,14 @@ public class SupervisorTask extends TrjTask {
                 case sHold:  // no setpoint changes.
                     // Upon entry, always indicate a new setpoint
                     if (this.runEntry) {
-                        System.out.println("SupervisorState: sHold");
+                        //System.out.println("SupervisorState: sHold");
                         newSp = true;
                     }
                     // If the override is true, adjust the setpoint and 
                     // reset the override flag and set the new flag
                     if (override == true) {
-                        Tsp = TspOverride;
-                        override = false;
+                        Tsp += TspMod;
+                        clearSetpointMod();
                         newSp = true;
                     }
                     // Determine the state transition based on the mode variable
@@ -160,7 +168,7 @@ public class SupervisorTask extends TrjTask {
                 case sTables:  // changes based on the setpoint tables
                     // Upon entry, always indicate a new setpoint
                     if (this.runEntry) {
-                        System.out.println("SupervisorState: sTables");
+                        //System.out.println("SupervisorState: sTables");
                         newSp = true;
                     }
                     // Get the new setpoint and compare it to the old one.
@@ -176,7 +184,7 @@ public class SupervisorTask extends TrjTask {
                     if (mode != SupervisorMode.TABLES) {
                         this.nextState = sHold;
                     } else if (override == true) {
-                        System.out.println("override");
+                        //System.out.println("override");
                         this.nextState = sOverride;
                     }
                     break;
@@ -186,11 +194,11 @@ public class SupervisorTask extends TrjTask {
                     //System.out.println("SupervisorState: sOverride");
                     // upon entry, always indicate that there is a new setpoint
                     if (this.runEntry || override) {
-                        System.out.println("SupervisorState: sOverride");
+                        //System.out.println("SupervisorState: sOverride");
                         newSp = true;
                         // change the setpoint and reset the flag
-                        Tsp = TspOverride;
-                        override = false;
+                        Tsp += TspMod;
+                        clearSetpointMod();
                     }
 
                     //Tsp = TspOverride;
