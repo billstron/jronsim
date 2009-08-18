@@ -41,7 +41,7 @@ public class ThermalTask extends TrjTask {
     double dt;
     double tNext;
     double Tin;
-    double Tout;
+    double Tout = 100;
     double a = 0.00004;
     double b = 0.0015;
     boolean heaterOn;
@@ -61,7 +61,6 @@ public class ThermalTask extends TrjTask {
         this.dt = dt;
         this.tNext = 0;
         this.Tin = 75;
-        this.Tout = 100;
         this.heaterOn = false;
         this.coolerOn = false;
     }
@@ -82,7 +81,6 @@ public class ThermalTask extends TrjTask {
             if (coolerOn) {
                 u -= 1.0;
             }
-
             Tin += (Tout - Tin) * a + u * b;
 
             tNext += dt;
