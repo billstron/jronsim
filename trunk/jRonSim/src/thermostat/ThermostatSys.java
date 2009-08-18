@@ -43,14 +43,18 @@ import userInterface.UserInterfaceJFrame;
 public class ThermostatSys extends TrjSys {
 
     String name;
-    private final ControlTask heaterContTask;
-    private final ControlTask coolerContTask;
+    private final HvacHystControlTask heaterHystCont;
+    private final HvacHystControlTask coolerHystCont;
+    private final HvacPIDControlTask heaterPidCont;
+    private final HvacPIDControlTask coolerPidCont;
+    private final TinFilterTask TinFilt;
+    private final HvacPwmTask heaterPwm;
+    private final HvacPwmTask coolerPwm;
     private final CoordinatorTask coordinator;
     private final SupervisorTask supervisor;
     private final UserInterfaceTask userInterface;
     private final ComTask com;
     private final GoalSeekerTask goalSeeker;
-    
 
     /** Construct the Thermostat System.
      * 
@@ -63,21 +67,44 @@ public class ThermostatSys extends TrjSys {
 
         this.name = name;
 
-        heaterContTask = new ControlTask("Heater Control Task", this,
+        double dtBox = 15 * 60;
+        double dtFilter = 1;
+        TinFilt = new TinFilterTask("Inside Temp Filter", this, therm, dtBox,
+                dtFilter);
+
+        double dtPeriod = 15 * 60;
+        double dtPwm = 1;
+        heaterPwm = new HvacPwmTask("Heater PWM", this, dtPeriod, true,
+                dtPwm, false/*trigger mode*/, therm);
+        coolerPwm = new HvacPwmTask("Cooler PWM", this, dtPeriod, false,
+                dtPwm, false/*trigger mode*/, therm);
+
+        double dtPid = 15 * 60;
+        double kp = 1;
+        double ki = 1;
+        double kd = 0;
+        heaterPidCont = new HvacPIDControlTask("Heater PID Controller", this,
+                true, kp, ki, kd, heaterPwm, TinFilt, dtPid);
+        coolerPidCont = new HvacPIDControlTask("Cooler PID Controller", this,
+                false, kp, ki, kd, coolerPwm, TinFilt, dtPid);
+
+        heaterHystCont = new HvacHystControlTask("Heater Control Task", this,
                 true, therm, 5.0);
-        coolerContTask = new ControlTask("Cooler Control Task", this,
+        coolerHystCont = new HvacHystControlTask("Cooler Control Task", this,
                 false, therm, 5.0);
 
         coordinator = new CoordinatorTask("Coordinator Task",
-                this, heaterContTask, coolerContTask, 5.0);
+                this, heaterHystCont, coolerHystCont,
+                heaterPidCont, coolerPidCont, 5.0);
         coordinator.setMode(ThermostatMode.COOLING);
+        coordinator.SetCommand(coordinator.START_PID_CONTROL);
 
         supervisor = new SupervisorTask("Supervisor Task", this,
                 5.0);
 
         userInterface = new UserInterfaceTask("User Interface Task", this,
                 0.5);
-        
+
         com = new ComTask("Communications Task", this, 1.0);
 
         goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
@@ -96,14 +123,37 @@ public class ThermostatSys extends TrjSys {
 
         this.name = name;
 
-        heaterContTask = new ControlTask("Heater Control Task", this,
+        double dtBox = 15 * 60;
+        double dtFilter = 1;
+        TinFilt = new TinFilterTask("Inside Temp Filter", this, therm, dtBox,
+                dtFilter);
+
+        double dtPeriod = 15 * 60;
+        double dtPwm = 1;
+        heaterPwm = new HvacPwmTask("Heater PWM", this, dtPeriod, true,
+                dtPwm, false/*trigger mode*/, therm);
+        coolerPwm = new HvacPwmTask("Cooler PWM", this, dtPeriod, false,
+                dtPwm, false/*trigger mode*/, therm);
+
+        double dtPid = 15 * 60;
+        double kp = 1;
+        double ki = 1;
+        double kd = 0;
+        heaterPidCont = new HvacPIDControlTask("Heater PID Controller", this,
+                true, kp, ki, kd, heaterPwm, TinFilt, dtPid);
+        coolerPidCont = new HvacPIDControlTask("Cooler PID Controller", this,
+                false, kp, ki, kd, coolerPwm, TinFilt, dtPid);
+
+        heaterHystCont = new HvacHystControlTask("Heater Control Task", this,
                 true, therm, 5.0);
-        coolerContTask = new ControlTask("Cooler Control Task", this,
+        coolerHystCont = new HvacHystControlTask("Cooler Control Task", this,
                 false, therm, 5.0);
 
         coordinator = new CoordinatorTask("Coordinator Task",
-                this, heaterContTask, coolerContTask, 5.0);
+                this, heaterHystCont, coolerHystCont,
+                heaterPidCont, coolerPidCont, 5.0);
         coordinator.setMode(ThermostatMode.COOLING);
+        coordinator.SetCommand(coordinator.START_PID_CONTROL);
 
         supervisor = new SupervisorTask("Supervisor Task", this,
                 5.0);
@@ -112,7 +162,7 @@ public class ThermostatSys extends TrjSys {
                 0.5);
 
         com = new ComTask("Communications Task", this, 1.0);
-        
+
         goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
                 supervisor, coordinator, userInterface, com, 5.0);
 

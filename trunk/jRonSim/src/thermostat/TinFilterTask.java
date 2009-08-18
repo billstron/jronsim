@@ -28,37 +28,39 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package thermostat;
 
-package comMessage;
+import TranRunJLite.TrjSys;
+import houseSimulation.HouseIO;
+import util.BoxcarFilter;
 
-import java.net.InetAddress;
-import java.util.GregorianCalendar;
-
-/** This class defines the base message that can be sent to and from houses.
+/**The Tin filter extends the boxcar filter.  It filters the inside temperature
+ * using a boxcar filter.  It always outputs the most recent result with at
+ * most dt time lag.  
  *
  * @author William Burke <billstron@gmail.com>
  */
-public class Message {
-    protected InetAddress from;
-    protected InetAddress to;
-    private MessageType type;
-    protected GregorianCalendar tSent;
+public class TinFilterTask extends BoxcarFilter {
 
-    /** constructor for the message.
-     *
-     * @param from -- address the message is from
-     * @param type -- the type of message
+    private HouseIO house;
+
+    /** Construct the Tin filter.
+     * 
+     * @param name
+     * @param sys
+     * @param house
+     * @param dtBox
+     * @param dt
      */
-    public Message(InetAddress from, MessageType type){
-        this.from = from;
-        this.type = type;
+    public TinFilterTask(String name, TrjSys sys, HouseIO house, double dtBox,
+            double dt) {
+        super(name, sys, true /*start active*/, true /*running filter*/,
+                dtBox, dt);
+        this.house = house;
     }
 
-    /** returns the type of the message
-     * 
-     * @return -- message type
-     */
-    public MessageType getType(){
-        return type;
+    @Override
+    public double getProcessValue() {
+        return house.getTempInside();
     }
 }
