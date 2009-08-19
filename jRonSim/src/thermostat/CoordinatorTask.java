@@ -38,8 +38,6 @@ import TranRunJLite.*;
  */
 public class CoordinatorTask extends TrjTask {
 
-    private double dt;
-    private double tNext;
     private ThermostatMode mode;
     private HvacHystControlTask heaterHyst = null;
     private HvacHystControlTask coolerHyst = null;
@@ -66,8 +64,7 @@ public class CoordinatorTask extends TrjTask {
 
         stateNames.add("Hysteresis Control");
         stateNames.add("PID Control");
-        this.dt = dt;
-        this.tNext = 0;
+        this.dtNominal = dt;
 
         this.mode = ThermostatMode.COOLING;
         this.heaterHyst = heaterHyst;
@@ -94,8 +91,7 @@ public class CoordinatorTask extends TrjTask {
 
         stateNames.add("Hysteresis Control");
         stateNames.add("PID Control");
-        this.dt = dt;
-        this.tNext = 0;
+        this.dtNominal = dt;
 
         this.mode = ThermostatMode.COOLING;
         this.heaterHyst = heaterHyst;
@@ -111,6 +107,14 @@ public class CoordinatorTask extends TrjTask {
     public final int START_HYST_CONTROL = 0;
     public final int START_PID_CONTROL = 1;
 
+    /** Check to see if this task is ready to run
+     * @param sys The system in which this task is embedded
+     * @return "true" if this task is ready to run
+     */
+    public boolean RunTaskNow(TrjSys sys) {
+        return CheckTime(sys.GetRunningTime());
+    }
+
     /** Runs the states associated with the Coordinator Task
      *
      * @param sys -- the TrjSys that this task is associated with
@@ -118,89 +122,84 @@ public class CoordinatorTask extends TrjTask {
      */
     @Override
     public boolean RunTask(TrjSys sys) {
-        // check to see if it is the right time to run the state
-        if (sys.GetRunningTime() >= tNext) {
-            // This only has one state, so not much to do here.
-            // Get the inside temperature from the control task.
-            Tin = coolerHyst.getTin();
-            // set the cooler and heater control tasks on or off depending
-            switch (currentState) {
+        // This only has one state, so not much to do here.
+        // Get the inside temperature from the control task.
+        Tin = coolerHyst.getTin();
+        // set the cooler and heater control tasks on or off depending
+        switch (currentState) {
 
-                case HYSTERESIS_CONTROL:  // hysteresis control
-                    // shut off the pid controllers
-                    if (heaterPid != null && coolerPid != null) {
-                        heaterPid.SetCommand(heaterPid.PID_STOP_CONTROL);
-                        coolerPid.SetCommand(coolerPid.PID_STOP_CONTROL);
+            case HYSTERESIS_CONTROL:  // hysteresis control
+                // shut off the pid controllers
+                if (heaterPid != null && coolerPid != null) {
+                    heaterPid.SetCommand(heaterPid.SISO_STOP_CONTROL);
+                    coolerPid.SetCommand(coolerPid.SISO_STOP_CONTROL);
+                }
+                // set the controllers based on the mode
+                switch (mode) {
+
+                    case OFF:
+                        heaterHyst.SetCommand(heaterHyst.SISO_STOP_CONTROL);
+                        coolerHyst.SetCommand(coolerHyst.SISO_STOP_CONTROL);
+                        break;
+
+                    case HEATING:
+                        heaterHyst.SetCommand(heaterHyst.SISO_START_CONTROL);
+                        coolerHyst.SetCommand(coolerHyst.SISO_STOP_CONTROL);
+                        break;
+
+                    case COOLING:
+                        heaterHyst.SetCommand(heaterHyst.SISO_STOP_CONTROL);
+                        coolerHyst.SetCommand(coolerHyst.SISO_START_CONTROL);
+                        break;
+                }
+                // calculate the transition
+                nextState = -1;
+                if (this.GetCommand() == START_PID_CONTROL) {
+                    if (coolerPid != null && heaterPid != null) {
+                        nextState = PID_CONTROL;
+                    } else {
+                        System.err.println("<CoordinatorTask> " +
+                                this.name +
+                                " Unsupported Control Type Selected");
                     }
-                    // set the controllers based on the mode
-                    switch (mode) {
+                }
+                break;
 
-                        case OFF:
-                            heaterHyst.SetCommand(heaterHyst.HYST_STOP_CONTROL);
-                            coolerHyst.SetCommand(coolerHyst.HYST_STOP_CONTROL);
-                            break;
+            case PID_CONTROL:  // pid control
+                // shut off the hysteresis controllers.
+                if (heaterHyst != null && coolerHyst != null) {
+                    heaterHyst.SetCommand(heaterHyst.SISO_STOP_CONTROL);
+                    coolerHyst.SetCommand(coolerHyst.SISO_STOP_CONTROL);
+                }
+                // set the controllers based on the mode
+                switch (mode) {
 
-                        case HEATING:
-                            heaterHyst.SetCommand(heaterHyst.HYST_START_CONTROL);
-                            coolerHyst.SetCommand(coolerHyst.HYST_STOP_CONTROL);
-                            break;
+                    case OFF:
+                        heaterPid.SetCommand(heaterPid.SISO_STOP_CONTROL);
+                        coolerPid.SetCommand(coolerPid.SISO_STOP_CONTROL);
+                        break;
 
-                        case COOLING:
-                            heaterHyst.SetCommand(heaterHyst.HYST_STOP_CONTROL);
-                            coolerHyst.SetCommand(coolerHyst.HYST_START_CONTROL);
-                            break;
-                    }
-                    // calculate the transition
-                    nextState = -1;
-                    if (this.GetCommand() == START_PID_CONTROL) {
-                        if (coolerPid != null && heaterPid != null) {
-                            nextState = PID_CONTROL;
-                        } else {
-                            System.err.println("<CoordinatorTask> " +
-                                    this.GetName() +
-                                    " Unsupported Control Type Selected");
-                        }
-                    }
-                    break;
+                    case HEATING:
+                        heaterPid.SetCommand(heaterPid.SISO_START_CONTROL);
+                        coolerPid.SetCommand(coolerPid.SISO_STOP_CONTROL);
+                        break;
 
-                case PID_CONTROL:  // pid control
-                    // shut off the hysteresis controllers.
+                    case COOLING:
+                        heaterPid.SetCommand(heaterPid.SISO_STOP_CONTROL);
+                        coolerPid.SetCommand(coolerPid.SISO_START_CONTROL);
+                        break;
+                }
+                // calculate the transition
+                nextState = -1;
+                if (this.GetCommand() == START_HYST_CONTROL) {
                     if (heaterHyst != null && coolerHyst != null) {
-                        heaterHyst.SetCommand(heaterHyst.HYST_STOP_CONTROL);
-                        coolerHyst.SetCommand(coolerHyst.HYST_STOP_CONTROL);
+                        nextState = HYSTERESIS_CONTROL;
+                    } else {
+                        System.err.println("<CoordinatorTask> " +
+                                this.name +
+                                " Unsupported Control Type Selected");
                     }
-                    // set the controllers based on the mode
-                    switch (mode) {
-
-                        case OFF:
-                            heaterPid.SetCommand(heaterPid.PID_STOP_CONTROL);
-                            coolerPid.SetCommand(coolerPid.PID_STOP_CONTROL);
-                            break;
-
-                        case HEATING:
-                            heaterPid.SetCommand(heaterPid.PID_START_CONTROL);
-                            coolerPid.SetCommand(coolerPid.PID_STOP_CONTROL);
-                            break;
-
-                        case COOLING:
-                            heaterPid.SetCommand(heaterPid.PID_STOP_CONTROL);
-                            coolerPid.SetCommand(coolerPid.PID_START_CONTROL);
-                            break;
-                    }
-                    // calculate the transition
-                    nextState = -1;
-                    if (this.GetCommand() == START_HYST_CONTROL) {
-                        if (heaterHyst != null && coolerHyst != null) {
-                            nextState = HYSTERESIS_CONTROL;
-                        } else {
-                            System.err.println("<CoordinatorTask> " +
-                                    this.GetName() +
-                                    " Unsupported Control Type Selected");
-                        }
-                    }
-            }
-            // set the next time to run.
-            tNext += dt;
+                }
         }
         return false;
     }

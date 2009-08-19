@@ -137,7 +137,5 @@ public class HvacPwmTask extends PWMGenerator {
             }
             sys.IncrementRunningTime(dt);
         }
-
-
     }
 }

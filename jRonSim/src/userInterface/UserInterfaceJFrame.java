@@ -306,30 +306,30 @@ public class UserInterfaceJFrame extends JFrame implements Runnable {
     }//GEN-LAST:event_holdRadioButtonActionPerformed
 
     private void upButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upButtonActionPerformed
-        System.out.println("up button");
+        //System.out.println("up button");
         io.setSetpointChange(1.0);
     }//GEN-LAST:event_upButtonActionPerformed
 
     private void downButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_downButtonActionPerformed
-        System.out.println("down button");
+        //System.out.println("down button");
         io.setSetpointChange(-1.0);
     }//GEN-LAST:event_downButtonActionPerformed
 
     private void holdButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_holdButtonActionPerformed
-        System.out.println("hold button");
+        //System.out.println("hold button");
         io.setHoldToggle();
     }//GEN-LAST:event_holdButtonActionPerformed
 
     private void offButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_offButtonActionPerformed
         worker.cancel(true);
-        System.out.println("off button");
+        //System.out.println("off button");
         //System.exit(0);
         io.stopProgram();
         Thread.currentThread().interrupt();
     }//GEN-LAST:event_offButtonActionPerformed
 
     private void auxTextFieldPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_auxTextFieldPropertyChange
-        System.out.println("temp property change");
+        //System.out.println("temp property change");
     }//GEN-LAST:event_auxTextFieldPropertyChange
 
     private void heaterLedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_heaterLedActionPerformed

@@ -38,8 +38,6 @@ import TranRunJLite.*;
  */
 public class ThermalTask extends TrjTask {
 
-    double dt;
-    double tNext;
     double Tin;
     double Tout = 100;
     double a = 0.00004;
@@ -55,14 +53,20 @@ public class ThermalTask extends TrjTask {
      */
     public ThermalTask(String name, TrjSys sys, double dt) {
         super(name, sys, 0, true);
-
+        this.dtNominal = dt;
         this.stateNames.add("only one");
-
-        this.dt = dt;
-        this.tNext = 0;
         this.Tin = 75;
         this.heaterOn = false;
         this.coolerOn = false;
+    }
+
+    /** Check to see if this task is ready to run
+     * @param sys The system in which this task is embedded
+     * @return "true" if this task is ready to run
+     */
+    public boolean RunTaskNow(TrjSys sys) {
+        //System.out.println("ThermalTask.RunTaskNow()");
+        return CheckTime(sys.GetRunningTime());
     }
 
     /** Runs the basic house simulation
@@ -72,19 +76,17 @@ public class ThermalTask extends TrjTask {
      */
     @Override
     public boolean RunTask(TrjSys sys) {
-        double t = sys.GetRunningTime();
-        if (t >= tNext) {
-            double u = 0;
-            if (heaterOn) {
-                u += 1.0;
-            }
-            if (coolerOn) {
-                u -= 1.0;
-            }
-            Tin += (Tout - Tin) * a + u * b;
 
-            tNext += dt;
+        double u = 0;
+        if (heaterOn) {
+            u += 1.0;
         }
+        if (coolerOn) {
+            u -= 1.0;
+        }
+        Tin += (Tout - Tin) * a + u * b;
+
+        //System.out.println("ThermalTask.RunTask(); returning");
         return false;
     }
 

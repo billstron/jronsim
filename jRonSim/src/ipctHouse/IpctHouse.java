@@ -75,6 +75,7 @@ public class IpctHouse {
      * @return indicates the need to stop the program (true, false)
      */
     boolean run() {
+        //System.out.println("here");
         boolean stop = false;
         TrjSys syss[] = {therm, tstat};
         for (TrjSys sys : syss) {
@@ -82,6 +83,7 @@ public class IpctHouse {
                 break; // Run all of the tasks
             }
         }
+        //System.out.println("here2");
         return stop;
     }
 

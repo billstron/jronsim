@@ -31,10 +31,6 @@ package thermostat;
 
 import util.BoxcarFilter;
 import TranRunJLite.*;
-import houseSimulation.ThermalSys;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 /** This computes PID Control for HVAC equipment.
  *
@@ -140,54 +136,5 @@ public class HvacPIDControlTask extends PIDControl {
     @Override
     public void PutActuationValue(double val) {
         pwm.setDutyRatio(val);
-    }
-
-    /** Test function
-     * 
-     * @param args
-     */
-    public static void main(String args[]) {
-
-        double tFinal = 60 * 60 * 5;
-        double dt = 1.0;
-        // Set up a file for writing results
-        PrintWriter dataFile0 = null;
-        try {
-            FileWriter fW = new FileWriter("dataFile0.txt");
-            dataFile0 = new PrintWriter(fW);
-        } catch (IOException e) {
-            System.out.println("IO Error " + e);
-            System.exit(1);  // File error -- quit
-        }
-
-
-        TrjTime tm = new TrjTimeSim(0.0);
-
-        TrjSys sys = new TrjSys(tm);
-
-        ThermalSys house = new ThermalSys("thermal house", tm);
-
-        HvacPwmTask pwm = null;
-        BoxcarFilter filt = null;
-        double dtControl = 15*60;
-        HvacPIDControlTask pid = new HvacPIDControlTask(
-            "PID Control",sys, false, 10, 1, 0, pwm, filt, dtControl);
-        pid.SetCommand(pid.PID_START_CONTROL);
-
-        TrjSys aSys[] = {sys, house};
-        while (tm.getRunningTime() <= tFinal) {
-
-            for (TrjSys s : aSys) {
-                if (s.RunTasks()) {
-                    break; // Run all of the tasks
-                } // RunTasks() returns system stop status
-            }
-            // Log data to a file
-            dataFile0.printf("%3.3f\t %3.3f\t %s\n", tm.getRunningTime(),
-                    house.getTempInside(),
-                    String.valueOf(pid.isUnitOn()));
-            sys.IncrementRunningTime(dt);
-        }
-
     }
 }

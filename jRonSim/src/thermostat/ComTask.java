@@ -41,8 +41,6 @@ import java.util.ArrayList;
  */
 public class ComTask extends TrjTask {
 
-    private double dt;
-    private double tNext;
     private ArrayList<Message> rxBuffer = new ArrayList<Message>();
     private ArrayList<Message> txQueue = new ArrayList<Message>();
 
@@ -54,8 +52,7 @@ public class ComTask extends TrjTask {
      */
     public ComTask(String name, TrjSys sys, double dt) {
         super(name, sys, 0, true);
-        this.dt = dt;
-        this.tNext = 0;
+        this.dtNominal = dt;
     }
 
     /** Get the most recent message and remove it from the buffer.
@@ -86,13 +83,13 @@ public class ComTask extends TrjTask {
             rxBuffer.remove(k);
         }
         return oldest;
-    }    
+    }
 
     /** Get the current number of messages in the message buffer.
      * 
      * @return
      */
-    public int getRxMsgBufferSize(){
+    public int getRxMsgBufferSize() {
         return rxBuffer.size();
     }
 
@@ -100,8 +97,16 @@ public class ComTask extends TrjTask {
      *
      * @param tx
      */
-    public void enqueTxMsg(Message tx){
+    public void enqueTxMsg(Message tx) {
         txQueue.add(tx);
+    }
+
+    /** Check to see if this task is ready to run
+     * @param sys The system in which this task is embedded
+     * @return "true" if this task is ready to run
+     */
+    public boolean RunTaskNow(TrjSys sys) {
+        return CheckTime(sys.GetRunningTime());
     }
 
     /** Run the communications task.
@@ -111,19 +116,11 @@ public class ComTask extends TrjTask {
      */
     @Override
     public boolean RunTask(TrjSys sys) {
-        double t = sys.GetRunningTime();
-        if (t >= tNext) {
-            // send all of the messages in the tx Queue
-            while(txQueue.size() > 0){
-                // TODO: send the message
-                txQueue.remove(0);
-            }
-            // update the next timer
-            tNext += dt;
-        } else {
-            if (runEntry) {
-                nextState = currentState;
-            }
+
+        // send all of the messages in the tx Queue
+        while (txQueue.size() > 0) {
+            // TODO: send the message
+            txQueue.remove(0);
         }
         return false;
     }
