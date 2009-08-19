@@ -42,8 +42,6 @@ import userInterface.UserInterfaceIO;
  */
 public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
 
-    private double dt;
-    private double tNext;
     private String auxDisplay;
     private String labelAuxMsg;
     private String mainDisplay;
@@ -71,8 +69,7 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
             double dt) {
         super(name, sys, 0, true);
         this.sys = sys;
-        this.dt = dt;
-        this.tNext = 0;
+        this.dtNominal = dt;
     }
 
     /** Get the Auxiliary display message.
@@ -116,7 +113,7 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
      *
      * @return
      */
-    public synchronized boolean getHeaterLed(){
+    public synchronized boolean getHeaterLed() {
         return heaterLed;
     }
 
@@ -125,7 +122,7 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
      *
      * @return
      */
-    public synchronized boolean getCoolerLed(){
+    public synchronized boolean getCoolerLed() {
         //System.out.println(coolerLed);
         return coolerLed;
     }
@@ -162,7 +159,7 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
      * 
      * @param mode
      */
-    public synchronized void setModeToggle(ThermostatMode mode){
+    public synchronized void setModeToggle(ThermostatMode mode) {
         this.tstatMode = mode;
     }
 
@@ -216,7 +213,7 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
      * 
      * @param state
      */
-    public void setHeaterLed(boolean state){
+    public void setHeaterLed(boolean state) {
         this.heaterLed = state;
     }
 
@@ -224,7 +221,7 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
      * 
      * @param state
      */
-    public void setCoolerLed(boolean state){
+    public void setCoolerLed(boolean state) {
         this.coolerLed = state;
     }
 
@@ -232,7 +229,7 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
      * 
      * @return
      */
-    public ThermostatMode getThermostatMode(){
+    public ThermostatMode getThermostatMode() {
         return tstatMode;
     }
 
@@ -244,6 +241,14 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
         return false;
     }
 
+    /** Check to see if this task is ready to run
+     * @param sys The system in which this task is embedded
+     * @return "true" if this task is ready to run
+     */
+    public boolean RunTaskNow(TrjSys sys) {
+        return CheckTime(sys.GetRunningTime());
+    }
+
     /** Run the User Interface Task.
      * 
      * @param sys
@@ -251,26 +256,19 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
      */
     @Override
     public boolean RunTask(TrjSys sys) {
-        double t = sys.GetRunningTime();
-        if (t >= tNext) {
-            if (TspNew) {
-                tDispTsp = System.currentTimeMillis() + dtDisp;
-                TspNew = false;
-            }
-            if (System.currentTimeMillis() <= tDispTsp) {
-                labelAuxMsg = "Setpoint";
-                auxDisplay = String.format("%3.0f", Tsp);
-            } else {
-                labelAuxMsg = "Temperature";
-                auxDisplay = String.format("%3.0f", Tin);
-            }
-            mainDisplay = "";
-            tNext += dt;
-        } else {
-            if (runEntry) {
-                nextState = currentState;
-            }
+
+        if (TspNew) {
+            tDispTsp = System.currentTimeMillis() + dtDisp;
+            TspNew = false;
         }
+        if (System.currentTimeMillis() <= tDispTsp) {
+            labelAuxMsg = "Setpoint";
+            auxDisplay = String.format("%3.0f", Tsp);
+        } else {
+            labelAuxMsg = "Temperature";
+            auxDisplay = String.format("%3.0f", Tin);
+        }
+        mainDisplay = "";
         return false;
     }
 }

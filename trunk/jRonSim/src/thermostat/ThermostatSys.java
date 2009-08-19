@@ -97,7 +97,7 @@ public class ThermostatSys extends TrjSys {
                 this, heaterHystCont, coolerHystCont,
                 heaterPidCont, coolerPidCont, 5.0);
         coordinator.setMode(ThermostatMode.COOLING);
-        coordinator.SetCommand(coordinator.START_PID_CONTROL);
+        coordinator.SetCommand(coordinator.START_HYST_CONTROL);
 
         supervisor = new SupervisorTask("Supervisor Task", this,
                 5.0);
@@ -153,7 +153,7 @@ public class ThermostatSys extends TrjSys {
                 this, heaterHystCont, coolerHystCont,
                 heaterPidCont, coolerPidCont, 5.0);
         coordinator.setMode(ThermostatMode.COOLING);
-        coordinator.SetCommand(coordinator.START_PID_CONTROL);
+        coordinator.SetCommand(coordinator.START_HYST_CONTROL);
 
         supervisor = new SupervisorTask("Supervisor Task", this,
                 5.0);

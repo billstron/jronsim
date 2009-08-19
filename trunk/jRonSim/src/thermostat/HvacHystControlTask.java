@@ -169,7 +169,7 @@ public class HvacHystControlTask extends HysteresisControl {
 
         HvacHystControlTask hyst = new HvacHystControlTask("generic", sys, true, house,
                 5.0);
-        hyst.SetCommand(hyst.HYST_START_CONTROL);
+        hyst.SetCommand(hyst.SISO_START_CONTROL);
 
         TrjSys aSys[] = {sys, house};
         while (tm.getRunningTime() <= tFinal) {

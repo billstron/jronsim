@@ -40,8 +40,6 @@ import java.util.ArrayList;
  */
 public abstract class BoxcarFilter extends TrjTask {
 
-    private double dt;
-    private double tNext = 0;
     private double tNextFilt = 0;
     private double dtBox;
     private int boxSize;
@@ -69,7 +67,7 @@ public abstract class BoxcarFilter extends TrjTask {
         super(name, sys, 0 /*Initial State*/, startActive);
         this.stateNames.add("Filter State (Only)");
 
-        this.dt = dt;
+        this.dtNominal = dt;
         this.dtBox = dtBox;
         this.boxSize = (int) Math.floor(dtBox / dt);
         this.yList = new ArrayList<Double>(this.boxSize);
@@ -85,6 +83,14 @@ public abstract class BoxcarFilter extends TrjTask {
         return yFilt;
     }
 
+    /** Check to see if this task is ready to run
+     * @param sys The system in which this task is embedded
+     * @return "true" if this task is ready to run
+     */
+    public boolean RunTaskNow(TrjSys sys) {
+        return CheckTime(sys.GetRunningTime());
+    }
+
     /** Apply the filter.  
      * 
      * @param sys
@@ -92,30 +98,29 @@ public abstract class BoxcarFilter extends TrjTask {
      */
     @Override
     public boolean RunTask(TrjSys sys) {
+
         double t = sys.GetRunningTime();
-        if (t >= tNext) {
-            // get the most recent process value
-            y = getProcessValue();
-            // check the size of the list and trim.
-            if (yList.size() == boxSize) {
-                yList.remove(yList.size() - 1);
+        // get the most recent process value
+        y = getProcessValue();
+        // check the size of the list and trim.
+        if (yList.size() == boxSize) {
+            yList.remove(yList.size() - 1);
+        }
+        // add the most recent value to the list.
+        yList.add(0, y);
+        // calculate the new filtered result.
+        if (t >= tNextFilt) {
+            double ySum = 0;
+            for (double yK : yList) {
+                ySum += yK;
             }
-            // add the most recent value to the list.
-            yList.add(0, y);
-            // calculate the new filtered result.
-            if (t >= tNextFilt) {
-                double ySum = 0;
-                for (double yK : yList) {
-                    ySum += yK;
-                }
-                yFilt = ySum / (double) boxSize;
-            }
-            // calculate the new filter time
-            if (runningFilt) {
-                tNextFilt += dtBox;
-            } else {
-                tNextFilt += dt;
-            }
+            yFilt = ySum / (double) boxSize;
+        }
+        // calculate the new filter time
+        if (runningFilt) {
+            tNextFilt += dtBox;
+        } else {
+            tNextFilt += dtNominal;
         }
         return false;
     }

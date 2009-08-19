@@ -44,7 +44,6 @@ import java.util.ArrayList;
 public class GoalSeekerTask extends TrjTask {
 
     private ArrayList<TrjState> states = new ArrayList<TrjState>();
-    private double tNext;
     private double dt;
     double Tin;
     double Tsp;
@@ -83,13 +82,14 @@ public class GoalSeekerTask extends TrjTask {
                 this, supervisor, coordinator, ui, com);
         states.add(normal);
         stateNames.add("Normal State");
+        stateNames.add("Economic Setpoint State");
+        this.dtNominal = dt;
 
         // initialize the variables
         this.Tin = 75;
         this.Tsp = 75;
         this.newSp = false;
         this.dt = dt;
-        this.tNext = 0;
     }
     /** State definitions.
      * 
@@ -119,25 +119,25 @@ public class GoalSeekerTask extends TrjTask {
         return next;
     }
 
+    /** Check to see if this task is ready to run
+     * @param sys The system in which this task is embedded
+     * @return "true" if this task is ready to run
+     */
+    public boolean RunTaskNow(TrjSys sys) {
+        //System.out.println("<GoalSeekerTask> RunTaskNow");
+        return CheckTime(sys.GetRunningTime());
+    }
+
     /** Run the Goal Seeker Task.
      * 
      * @param sys
      * @return
      */
     public boolean RunTask(TrjSys sys) {
-        // get the current runtime
-        double t = sys.GetRunningTime();
-        // run if the time is right
-        if (t >= tNext) {
-            // run the state defined by the tran run system
-            states.get(this.currentState).run(t);
-            // update the timing variable.  
-            tNext += dt;
-        } else {
-            if (runEntry) {
-                nextState = currentState;
-            }
-        }
+        //System.out.println("here");
+        // run the state defined by the tran run system
+        states.get(this.currentState).run(sys.GetRunningTime());
+
         return false;
     }
 }
