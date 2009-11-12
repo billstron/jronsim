@@ -28,32 +28,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package houseSimulation;
 
-import TranRunJLite.TrjSys;
+package houseSimulation;
 
 /**
  *
  * @author William Burke <billstron@gmail.com>
  */
-public class AirConditionerTask extends HvacUnitTask {
+class HeaterTask {
 
-    private double Tduct;
-    private double Pdemand;
-
-    public AirConditionerTask(String name, TrjSys sys, double dt, double tonCap) {
-        super(name, sys, dt, false/*heater?*/, 60.0, 60.0);
-        this.Tduct = 75;
-        this.Pdemand = 0;
+    public HeaterTask() {
     }
 
-    @Override
-    protected double findDuctTemp() {
-        return Tduct;
-    }
-
-    @Override
-    protected double findPowerDemand() {
-        return Pdemand;
-    }
 }

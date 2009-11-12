@@ -36,7 +36,7 @@ import TranRunJLite.*;
  * 
  * @author William Burke <billstron@gmail.com>
  */
-public class ThermalTask extends TrjTask {
+public class ThermalSimTask extends TrjTask {
 
     double Tin;
     double Tout = 100;
@@ -51,7 +51,7 @@ public class ThermalTask extends TrjTask {
      * @param sys -- system it belongs to
      * @param dt -- time step
      */
-    public ThermalTask(String name, TrjSys sys, double dt) {
+    public ThermalSimTask(String name, TrjSys sys, double dt) {
         super(name, sys, 0, true);
         this.dtNominal = dt;
         this.stateNames.add("only one");
@@ -65,7 +65,7 @@ public class ThermalTask extends TrjTask {
      * @return "true" if this task is ready to run
      */
     public boolean RunTaskNow(TrjSys sys) {
-        //System.out.println("ThermalTask.RunTaskNow()");
+        //System.out.println("ThermalSimTask.RunTaskNow()");
         return CheckTime(sys.GetRunningTime());
     }
 
@@ -86,7 +86,7 @@ public class ThermalTask extends TrjTask {
         }
         Tin += (Tout - Tin) * a + u * b;
 
-        //System.out.println("ThermalTask.RunTask(); returning");
+        //System.out.println("ThermalSimTask.RunTask(); returning");
         return false;
     }
 
