@@ -53,9 +53,6 @@ public abstract class HvacUnitTask extends TrjTask {
 
     protected abstract double findPowerDemand();  // get the power demand
 
-    protected abstract void putInputState(boolean state); // put the input state
-
-    protected abstract void putFanState(boolean state);  // put the fan state
     /** private state definitions
      */
     private final int STATE_OFF = 0;

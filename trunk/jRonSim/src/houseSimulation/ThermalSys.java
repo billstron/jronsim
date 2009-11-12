@@ -39,7 +39,9 @@ import TranRunJLite.*;
 public class ThermalSys extends TrjSys implements HouseIO {
 
     String name;
-    private ThermalTask therm;
+    private HouseThermalSim thermSim;
+    private HvacUnitTask acTask;
+    private HvacUnitTask heaterTask;
 
     /** construct the thermal simulation
      * 
@@ -49,7 +51,19 @@ public class ThermalSys extends TrjSys implements HouseIO {
     public ThermalSys(String name, TrjTime tm) {
         super(tm);
         this.name = name;
-        therm = new ThermalTask("Thermal Task", this, 1.0);
+        ThermalUnit[] unitList = new ThermalUnit[5];
+        thermSim = new HouseThermalSim("House Simulation", this, unitList, 5,
+                true);
+
+        unitList[thermSim.AIR] = new AirThermalUnit();
+        unitList[thermSim.COOLER] = new HvacThermalUnit();
+        unitList[thermSim.HEATER] = new HvacThermalUnit();
+        unitList[thermSim.EXTWALL] = new ExtWallThermalUnit();
+        unitList[thermSim.INTWALL] = new IntWallThermalUnit();
+
+        acTask = new AirConditionerTask();
+        heaterTask = new HeaterTask();
+        
     }
 
     /** get inside temperature
@@ -57,7 +71,7 @@ public class ThermalSys extends TrjSys implements HouseIO {
      * @return
      */
     public double getTempInside() {
-        return therm.getTin();
+        return thermSim.getTin();
     }
 
     /** get heater state
@@ -65,7 +79,7 @@ public class ThermalSys extends TrjSys implements HouseIO {
      * @return heater on state
      */
     public boolean getHeaterOnState() {
-        return therm.getHeaterOn();
+        return thermSim.getHeaterOn();
     }
 
     /** set the heater on state
@@ -73,7 +87,7 @@ public class ThermalSys extends TrjSys implements HouseIO {
      * @param state
      */
     public void setHeaterOnState(boolean state) {
-        therm.setHeaterOn(state);
+        thermSim.setHeaterOn(state);
     }
 
     /** get the cooler state
@@ -81,7 +95,7 @@ public class ThermalSys extends TrjSys implements HouseIO {
      * @return
      */
     public boolean getCoolerOnState() {
-        return therm.getCoolerOn();
+        return thermSim.getCoolerOn();
     }
 
     /** set the cooler state
@@ -89,6 +103,6 @@ public class ThermalSys extends TrjSys implements HouseIO {
      * @param state
      */
     public void setCoolerOnState(boolean state) {
-        therm.setCoolerOn(state);
+        thermSim.setCoolerOn(state);
     }
 }
