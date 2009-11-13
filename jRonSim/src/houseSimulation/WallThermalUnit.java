@@ -28,26 +28,64 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package houseSimulation;
 
 /**
  *
  * @author William Burke <billstron@gmail.com>
  */
-class ExtWallThermalUnit extends ThermalUnit {
+class WallThermalUnit extends ThermalUnit
+{
 
-    public ExtWallThermalUnit() {
+    /** Constructs the Thermal Unit for Internal and External Walls.
+     *
+     * @param m
+     * @param kAir
+     * @param kAmb -- Set to zero for Internal Walls
+     */
+    public WallThermalUnit(double m, double kAir, double kAmb)
+    {
+        super(5, 2);
+        this.temperature = 76.0;  // ^oF Initial temperature
+        this.m = m; // typ 1581 * .8 * 17 lb
+        this.cp = 0.29;  // BTU/(lb F)
+        this.cpAir = 0.24;  // BTU/(lb F)
+        this.k1 = kAir;  // typ 0.6475
+        this.k2 = kAmb;  // typ 0.6475
+    }
+
+    /** Constructs the Thermal Unit for Internal Walls.
+     * 
+     * @param m
+     * @param kAir
+     */
+    public WallThermalUnit(double m, double kAir){
+        super(5, 2);
+        this.temperature = 76.0;  // ^oF Initial temperature
+        this.m = m; // typ 1581 * .8 * 17 lb
+        this.cp = 0.29;  // BTU/(lb F)
+        this.cpAir = 0.24;  // BTU/(lb F)
+        this.k1 = kAir;  // typ 0.6475
+        this.k2 = 0;
+    }
+
+    public double getQToAir()
+    {
+        temperature = x[i];
+        return (x[HouseThermalSim.AIR_I] - temperature) * k1;
+    }
+
+    private double getQToAmbient()
+    {
+        temperature = x[i];
+        return (u[HouseThermalSim.TOUT_I] - temperature) * k2;
     }
 
     @Override
-    public double getDeriv(HouseThermalSim sim) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public double getDeriv()
+    {
+        temperature = x[i];
+        double dx = (getQToAir() + getQToAmbient()) / (cp * m);
+        return dx;
     }
-
-    @Override
-    public void setTemp(double Temp) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }

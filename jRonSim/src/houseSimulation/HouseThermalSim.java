@@ -36,14 +36,17 @@ import ODEsolver.*;
  * 
  * @author William Burke <billstron@gmail.com>
  */
-public class HouseThermalSim extends TrjTask {
+public class HouseThermalSim extends TrjTask
+{
 
     // house parameters
     ThermalUnit houseList[];
     private int nStates;
+    private int nInputs = 2;
     double Tout;  ///< guess...
     double RadSolar;
-    double[] x;
+    double[] x;  // Current states
+    double[] u;  // Current inputs
     // Ode parameters. 
     double tLast;  //  Time at which simulation was last run
     double tCur;  // Current time
@@ -55,33 +58,35 @@ public class HouseThermalSim extends TrjTask {
     double[] x0;
     double[] abstol;  // Absolute and relative tolerances
     double reltol;
-
-    public final int AIR = 0;
-    public final int HEATER = 1;
-    public final int COOLER = 2;
-    public final int INTWALL = 3;
-    public final int EXTWALL = 4;
+    public static final int AIR_I = 0;
+    public static final int HEATER_I = 1;
+    public static final int COOLER_I = 2;
+    public static final int INTWALL_I = 3;
+    public static final int EXTWALL_I = 4;
+    public static final int TOUT_I = 0;
+    public static final int RAD_I = 1;
 
     public HouseThermalSim(
             String name,
             TrjSys sys,
             ThermalUnit houseList[],
-            int nStates,
-            boolean useAdaptiveSolver) {
+            boolean useAdaptiveSolver)
+    {
         super(name, sys, 0 /*initial state*/, true /*taskActive*/);
 
         this.houseList = houseList;
         this.useAdaptiveSolver = useAdaptiveSolver;
-        this.nStates = nStates;
+        this.nStates = houseList.length;
         this.x = new double[nStates];
         this.x0 = new double[nStates];
         this.abstol = new double[nStates];
+        this.u = new double[nInputs];
 
         tLast = 0.0;
         // Create an ODE (simulation) object
         // State variables:
-        //  velMotor, angleMotor, velLoad, angleLoad
-        for (int i = 0; i < nStates; i++) {
+        for (int i = 0; i < nStates; i++)
+        {
             x0[i] = 0.0;  // State variable initial values
             abstol[i] = 1.e-4;  // Absolute tolerance for adaptive solvers
         }
@@ -98,31 +103,38 @@ public class HouseThermalSim extends TrjTask {
         stepSize = 1.e-4;  // Nominal step size
     }
 
-    public boolean RunTaskNow(TrjSys sys) {
+    public boolean RunTaskNow(TrjSys sys)
+    {
         // The simulation runs all the time and has no states.
         // The simulation runs all the time and has no states.
         tCur = sys.GetRunningTime();
-        if (tCur <= tLast) {
+        if (tCur <= tLast)
+        {
             // Make sure time has moved forward
             tLast = tCur;
             return false;
-        } else {
+        }
+        else
+        {
             return true;
         }
     }
 
-    @Override
-    public boolean RunTask(TrjSys sys) {
+    public boolean RunTask(TrjSys sys)
+    {
         // The simulation runs all the time and has no states.
         // This method just moves the simulation forward to the
         // current time.
         // Run the simulation to the current time
 
         tCur = sys.GetRunningTime();
-        if (useAdaptiveSolver) {
+        if (useAdaptiveSolver)
+        {
             lastStep = hs.multiStepAdaptive(tCur - tLast, stepSize, stepMin);
             stepSize = lastStep;  // For the next iteration
-        } else {
+        }
+        else
+        {
             hs.multiStepFixed(tCur - tLast, stepSize);
         }
         tLast = tCur;
@@ -130,27 +142,30 @@ public class HouseThermalSim extends TrjTask {
     }
 
     // Create an inner class for the simulation
-    public class HouseODE extends RKF45 {
+    public class HouseODE extends RKF45
+    {
 
         public HouseODE(int nn, double xx0[], double t0,
-                double[] abstol, double reltol) {
+                double[] abstol, double reltol)
+        {
             super(nn, xx0, t0, abstol, reltol);
         }
 
-        @Override
-        public void deriv() {
-            // State variables:
-            // use x[0] ... x[nstate-1]
-            for (int k = 0; k < nStates; k++) {
-                ThermalUnit u = houseList[k];
-                u.setTemp(x[k]);
+        public void deriv()
+        {
+            // update the informatoin for each state.
+            for (int k = 0; k < nStates; k++)
+            {
+                ThermalUnit unit = houseList[k];
+                unit.setInputs(u);
+                unit.setStates(x);
             }
-            // get the derivitives
-            for(int k = 0; k < nStates; k++){
-                ThermalUnit u = houseList[k];
-                //dx[k] = u.getDeriv(this);
+            // Compute the derivatives for each state
+            for (int k = 0; k < nStates; k++)
+            {
+                ThermalUnit unit = houseList[k];
+                dx[k] = unit.getDeriv();
             }
-            // todo: use matrix math to get the derivative.  
         }
     }
 }
