@@ -28,26 +28,68 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package houseSimulation;
 
 /**
  *
  * @author William Burke <billstron@gmail.com>
  */
-class AirThermalUnit extends ThermalUnit {
+class AirThermalUnit extends ThermalUnit
+{
 
-    public AirThermalUnit() {
+    private HvacThermalUnit heater = null;
+    private HvacThermalUnit cooler = null;
+    private WallThermalUnit extWall = null;
+    private WallThermalUnit intWall = null;
+
+    public AirThermalUnit(double m, double windowArea, double infiltrationFlow,
+            double internalInput, HvacThermalUnit heater,
+            HvacThermalUnit cooler, WallThermalUnit extWall,
+            WallThermalUnit intWall)
+    {
+        super(5, 2);
+        this.m = m;  // typ 13290 * 0.075;  ft^3 * lb/ft^3
+        this.temperature = 75.0;  // Initial temperature
+        this.cpAir = 0.24;  // BTU/(lb F)
+        this.k1 = windowArea;  // typ 225 ft^2 (ext 91)
+        this.fanFlow = infiltrationFlow;
+        // typ (8325  * 0.075) / 3600 ft^3/hr -> lb/s (ext 3375) infiltration
+        this.heatInputMax = internalInput;
+        // typ 2880 / 3600 (btu/hr) / (hr/s) -> btu/s input from appliances, etc
+
+        this.heater = heater;
+        this.cooler = cooler;
+        this.intWall = intWall;
+        this.extWall = extWall;
     }
 
     @Override
-    public double getDeriv(HouseThermalSim sim) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    public double getDeriv()
+    {
+        temperature = x[i];
+        // Infiltration Calculations.
+        // Air fan brings in air from the outside at the constant rate fanFlow
+        fanOutletTemp = u[HouseThermalSim.TOUT_I];  // brings in air from outside
 
-    @Override
-    public void setTemp(double Temp) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+        // Internal heat sources and heat through windows.
+        // First term is radiation input through the windows.
+        // Second term is constant from internal sources.  Computers etc.
+        //      btu/hr / 3600 = btu/sec
+        heatInput = (u[HouseThermalSim.RAD_I] * k1) / 3600 + heatInputMax;
 
+        // Air temperature is determined by a mixing process and conduction.
+        // For mixing: Rate of change of air temperature = (Qin / m)(Tin - Tout)
+        // Heater air mixing with room air
+        double Qh = (heater.getFanFlow() / m) * (heater.getFanOutletTemp() -
+                temperature);
+        // Cooler air mixing with room air
+        double Qc = (cooler.getFanFlow() / m) * (cooler.getFanOutletTemp() -
+                temperature);
+        // Infiltration Mixing.
+        double Qi = (fanFlow / m) * (fanOutletTemp - temperature);
+        // Combine heat inputs.
+        double dx = Qh + Qc + Qi + (heatInput - intWall.getQToAir()) -
+                extWall.getQToAir() / (cpAir * m);
+        return dx;
+    }
 }

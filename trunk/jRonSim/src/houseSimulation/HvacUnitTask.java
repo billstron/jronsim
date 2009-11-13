@@ -43,16 +43,14 @@ import TranRunJLite.TrjTask;
  *
  * @author William Burke <billstron@gmail.com>
  */
-public abstract class HvacUnitTask extends TrjTask {
+public class HvacUnitTask extends TrjTask
+{
 
     private boolean heater;
     private double fanTon, fanToff;
-    protected double P;
-
-    protected abstract double findDuctTemp();  // get the duct temp
-
-    protected abstract double findPowerDemand();  // get the power demand
-
+    private double Pdemand;  // current power demand
+    private double Tduct;  // Current duct exit temperature
+    private HvacThermalUnit thermUnit; // the thermal unit being controlled
     /** private state definitions
      */
     private final int STATE_OFF = 0;
@@ -74,7 +72,8 @@ public abstract class HvacUnitTask extends TrjTask {
      * @param fanToff -- Temp to turn fan off.
      */
     public HvacUnitTask(String name, TrjSys sys, double dt, boolean heater,
-            double fanTon, double fanToff) {
+            double fanTon, double fanToff)
+    {
         super(name, sys, 0/*Initial State*/, true/*active*/);
 
         stateNames.add("Off State");
@@ -86,18 +85,22 @@ public abstract class HvacUnitTask extends TrjTask {
         this.heater = heater;
         this.fanTon = fanTon;
         this.fanToff = fanToff;
-        this.P = 0;
+        this.Pdemand = 0;
     }
 
     /** Returns the current on state of the unit.
      * 
      * @return
      */
-    public boolean getOnState() {
+    public boolean getOnState()
+    {
         boolean state;
-        if (currentState == STATE_PRE || currentState == STATE_ON) {
+        if (currentState == STATE_PRE || currentState == STATE_ON)
+        {
             state = true;
-        } else {
+        }
+        else
+        {
             state = false;
         }
         return state;
@@ -107,8 +110,19 @@ public abstract class HvacUnitTask extends TrjTask {
      * 
      * @return
      */
-    public double getPowerDemand() {
-        return P;
+    public double getPowerDemand()
+    {
+        return Pdemand;
+    }
+
+    private void putFanState(boolean b)
+    {
+        thermUnit.setFanState(b);
+    }
+
+    private void putInputState(boolean b)
+    {
+        thermUnit.setHeaterState(b);
     }
 
     /** Tells when to run the task.
@@ -117,7 +131,8 @@ public abstract class HvacUnitTask extends TrjTask {
      * @return
      */
     @Override
-    public boolean RunTask(TrjSys sys) {
+    public boolean RunTask(TrjSys sys)
+    {
         return CheckTime(sys.GetRunningTime());
     }
 
@@ -127,84 +142,96 @@ public abstract class HvacUnitTask extends TrjTask {
      * @return
      */
     @Override
-    public boolean RunTaskNow(TrjSys sys) {
-        switch (currentState) {
+    public boolean RunTaskNow(TrjSys sys)
+    {
+        // Get the duck temperature
+        Tduct = thermUnit.getFanOutletTemp();
+        // get the power demand
+        Pdemand = thermUnit.getP();
+        // run the states
+        switch (currentState)
+        {
             case STATE_OFF:  // nothing going on.  
-                if (runEntry) {
+                if (runEntry)
+                {
                     // turn everything off
                     putFanState(false);
                     putInputState(false);
                 }
-                // get the power demand
-                P = findPowerDemand();
+
                 // Compute Transition
                 nextState = -1;
-                if (GetCommand() == TURN_ON) {
+                if (GetCommand() == TURN_ON)
+                {
                     nextState = STATE_PRE;
                 }
                 break;
 
             case STATE_PRE:  // get coils to desired temp
-                if (runEntry) {
+                if (runEntry)
+                {
                     // turn on the input only
                     putFanState(false);
                     putInputState(true);
                 }
-                // get the power demand
-                P = findPowerDemand();
                 // Get the difference in the duct temp and the transition temp
-                double dTon = fanTon - findDuctTemp();
-                if (heater) {
+                double dTon = fanTon - Tduct;
+                if (heater)
+                {
                     dTon = -dTon;
                 }
                 // Compute Transition
                 nextState = -1;
-                if (dTon > 0) {
+                if (dTon > 0)
+                {
                     // if the duct is to the proper temp, go to on state
                     nextState = STATE_ON;
                 }
-                if (GetCommand() == TURN_OFF) {
+                if (GetCommand() == TURN_OFF)
+                {
                     // if the unit gets switche off, go to post state
                     nextState = STATE_POST;
                 }
                 break;
 
             case STATE_ON:  // actively heating/cooling
-                if (runEntry) {
+                if (runEntry)
+                {
                     // turn both on
                     putFanState(true);
                     putInputState(true);
                 }
-                // get the current power demand
-                P = findPowerDemand();
                 // Compute Transition
                 nextState = -1;
-                if (GetCommand() == TURN_OFF) {
+                if (GetCommand() == TURN_OFF)
+                {
                     // if the unit is switched off, go to post state
                     nextState = STATE_POST;
                 }
                 break;
 
             case STATE_POST:  // extracting energy from the coils
-                if (runEntry) {
+                if (runEntry)
+                {
                     // turn the unit off
                     putFanState(true);
                     putInputState(false);
                 }
-                // get the current power demand
-                P = findPowerDemand();
                 // Get the difference in the duct temp and the transition temp
-                double dToff = findDuctTemp() - fanToff;
-                if (heater) {
+                double dToff = Tduct - fanToff;
+                if (heater)
+                {
                     dToff = -dToff;
                 }
                 // Compute Transition
                 nextState = -1;
-                if (dToff > 0) {
+                if (dToff > 0)
+                {
                     // if the unit is down to temp, go to off state
                     nextState = STATE_OFF;
                 }
-                if (GetCommand() == TURN_ON) {
+                if (GetCommand() == TURN_ON)
+                {
                     // if the unit is switched on, go to pre state
                     nextState = STATE_PRE;
                 }

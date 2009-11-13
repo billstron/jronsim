@@ -30,13 +30,16 @@
  */
 package houseSimulation;
 
-/**
+/** The thermal units store and transfer energy inside the house.  
  *
  * @author William Burke <billstron@gmail.com>
  */
-public abstract class ThermalUnit {
+public abstract class ThermalUnit
+{
 
-    protected HouseThermalSim sim;
+    protected int i = 0;
+    protected double[] x;
+    protected double[] u;
     protected double m;  ///< mass
     protected double cp; ///< specific heat of material in this unit
     protected double cpAir; ///< specific heat of air flowing through around, etc. this unit
@@ -52,10 +55,56 @@ public abstract class ThermalUnit {
     protected double k3;  ///< Other relevant heat transfer coefs
     protected double heatInput;  ///< Direct heat input (Capacity of Unit)
     protected double heatInputMax;  ///< Max heat input.
-    protected double heatCop;  ///< Used to scale the heater power.
+    protected double heatEfficiency;  ///< Used to scale the heater power.
     protected double tempVar;  ///< Used to store variables that need to be seen.
 
-    
-    public abstract double getDeriv(HouseThermalSim sim);
-    public abstract void setTemp(double Temp);
+    /** Constructor for the ThermalUnit
+     *
+     * @param nStates -- number of states
+     * @param nInputs -- number of inputs
+     */
+    public ThermalUnit(int nStates, int nInputs)
+    {
+        this.x = new double[nStates];
+        this.u = new double[nInputs];
+    }
+
+    /** Comput the derivative of the system give the x and u specified
+     *
+     * @param sim
+     * @param x
+     * @param u
+     * @return
+     */
+    public double getDeriv(double[] x, double[] u)
+    {
+        setStates(x);
+        setInputs(u);
+        return getDeriv();
+    }
+
+    /** Compute the derivative given the current x and u.
+     * 
+     * @param sim
+     * @return
+     */
+    public abstract double getDeriv();
+
+    /** Update the current x of the system.
+     *
+     * @param x
+     */
+    public void setStates(double[] x)
+    {
+        this.x = x;
+    }
+
+    /** Update the current u to the system.
+     * 
+     * @param u
+     */
+    public void setInputs(double[] inputs)
+    {
+        this.u = inputs;
+    }
 }

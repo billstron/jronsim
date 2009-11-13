@@ -36,7 +36,8 @@ import TranRunJLite.*;
  * 
  * @author William Burke <billstron@gmail.com>
  */
-public class ThermalSys extends TrjSys implements HouseIO {
+public class ThermalSys extends TrjSys implements HouseIO
+{
 
     String name;
     private HouseThermalSim thermSim;
@@ -48,29 +49,59 @@ public class ThermalSys extends TrjSys implements HouseIO {
      * @param name -- name of the simulation
      * @param tm -- time structure to be used
      */
-    public ThermalSys(String name, TrjTime tm) {
+    public ThermalSys(String name, TrjTime tm, ThermalParams params)
+    {
         super(tm);
         this.name = name;
         ThermalUnit[] unitList = new ThermalUnit[5];
-        thermSim = new HouseThermalSim("House Simulation", this, unitList, 5,
+
+        // Construct the cooler unit
+        HvacThermalUnit cooler = new HvacThermalUnit(HvacThermalUnit.COOLER,
+                params.coolerMass,
+                params.coolerFanMax, params.coolerFanEfficiency,
+                params.coolerHeatInputMax, params.coolerHeatEfficiency);
+        unitList[HouseThermalSim.COOLER_I] = cooler;
+
+        // Construct the heater unit
+        HvacThermalUnit heater = new HvacThermalUnit(HvacThermalUnit.HEATER,
+                params.heaterMass,
+                params.heaterfanMax, params.heaterFanEfficiency,
+                params.heaterHeatInputMax, params.heaterHeatEfficiency);
+        unitList[HouseThermalSim.HEATER_I] = heater;
+
+        // Construct the external wall unit
+        WallThermalUnit extWall = new WallThermalUnit(params.extWallMass,
+                params.extWallKair, params.extWallKamb);
+        unitList[HouseThermalSim.EXTWALL_I] = extWall;
+
+        // construct the internal wall unit
+        WallThermalUnit intWall = new WallThermalUnit(params.intWallMass,
+                params.intWallKair);
+        unitList[HouseThermalSim.INTWALL_I] = intWall;
+
+        // construct the air unit
+        AirThermalUnit air = new AirThermalUnit(params.airMass,
+                params.windowArea, params.infiltrationFlow,
+                params.internalInput,
+                heater, cooler, extWall, intWall);
+        unitList[HouseThermalSim.AIR_I] = air;
+
+        thermSim = new HouseThermalSim("House Simulation", this, unitList,
                 true);
 
-        unitList[thermSim.AIR] = new AirThermalUnit();
-        unitList[thermSim.COOLER] = new HvacThermalUnit();
-        unitList[thermSim.HEATER] = new HvacThermalUnit();
-        unitList[thermSim.EXTWALL] = new ExtWallThermalUnit();
-        unitList[thermSim.INTWALL] = new IntWallThermalUnit();
-
-        acTask = new AirConditionerTask();
-        heaterTask = new HeaterTask();
-        
+        double dtUnit = 1;
+        acTask = new HvacUnitTask("AC Opperatons Task", this, dtUnit,
+                false /* not a heater */, 60, 60);
+        heaterTask = new HvacUnitTask("Heater Opperatons Task", this, dtUnit,
+                true /* a heater */, 90, 90);
     }
 
     /** get inside temperature
      * 
      * @return
      */
-    public double getTempInside() {
+    public double getTempInside()
+    {
         return thermSim.getTin();
     }
 
@@ -78,7 +109,8 @@ public class ThermalSys extends TrjSys implements HouseIO {
      *
      * @return heater on state
      */
-    public boolean getHeaterOnState() {
+    public boolean getHeaterOnState()
+    {
         return thermSim.getHeaterOn();
     }
 
@@ -86,7 +118,8 @@ public class ThermalSys extends TrjSys implements HouseIO {
      * 
      * @param state
      */
-    public void setHeaterOnState(boolean state) {
+    public void setHeaterOnState(boolean state)
+    {
         thermSim.setHeaterOn(state);
     }
 
@@ -94,7 +127,8 @@ public class ThermalSys extends TrjSys implements HouseIO {
      *
      * @return
      */
-    public boolean getCoolerOnState() {
+    public boolean getCoolerOnState()
+    {
         return thermSim.getCoolerOn();
     }
 
@@ -102,7 +136,8 @@ public class ThermalSys extends TrjSys implements HouseIO {
      * 
      * @param state
      */
-    public void setCoolerOnState(boolean state) {
+    public void setCoolerOnState(boolean state)
+    {
         thermSim.setCoolerOn(state);
     }
 }
