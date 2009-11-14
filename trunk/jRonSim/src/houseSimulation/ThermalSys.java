@@ -40,60 +40,66 @@ public class ThermalSys extends TrjSys implements HouseIO
 {
 
     String name;
-    private HouseThermalSim thermSim;
+    private HouseThermalSimTask thermSim;
     private HvacUnitTask acTask;
     private HvacUnitTask heaterTask;
 
-    /** construct the thermal simulation
+    /** construct the thermal simulation using default parameters.  
      * 
      * @param name -- name of the simulation
      * @param tm -- time structure to be used
      */
-    public ThermalSys(String name, TrjTime tm, ThermalParams params)
+    public ThermalSys(String name, TrjTime tm)
     {
         super(tm);
         this.name = name;
         ThermalUnit[] unitList = new ThermalUnit[5];
 
+        // Create some default parameters
+        ThermalParams params = new ThermalParams();
         // Construct the cooler unit
         HvacThermalUnit cooler = new HvacThermalUnit(HvacThermalUnit.COOLER,
                 params.coolerMass,
                 params.coolerFanMax, params.coolerFanEfficiency,
                 params.coolerHeatInputMax, params.coolerHeatEfficiency);
-        unitList[HouseThermalSim.COOLER_I] = cooler;
+        unitList[HouseThermalSimTask.COOLER_I] = cooler;
 
         // Construct the heater unit
         HvacThermalUnit heater = new HvacThermalUnit(HvacThermalUnit.HEATER,
                 params.heaterMass,
                 params.heaterfanMax, params.heaterFanEfficiency,
                 params.heaterHeatInputMax, params.heaterHeatEfficiency);
-        unitList[HouseThermalSim.HEATER_I] = heater;
+        unitList[HouseThermalSimTask.HEATER_I] = heater;
 
         // Construct the external wall unit
         WallThermalUnit extWall = new WallThermalUnit(params.extWallMass,
+                HouseThermalSimTask.EXTWALL_I,
                 params.extWallKair, params.extWallKamb);
-        unitList[HouseThermalSim.EXTWALL_I] = extWall;
+        unitList[HouseThermalSimTask.EXTWALL_I] = extWall;
 
         // construct the internal wall unit
         WallThermalUnit intWall = new WallThermalUnit(params.intWallMass,
+                HouseThermalSimTask.INTWALL_I,
                 params.intWallKair);
-        unitList[HouseThermalSim.INTWALL_I] = intWall;
+        unitList[HouseThermalSimTask.INTWALL_I] = intWall;
 
         // construct the air unit
         AirThermalUnit air = new AirThermalUnit(params.airMass,
                 params.windowArea, params.infiltrationFlow,
                 params.internalInput,
-                heater, cooler, extWall, intWall);
-        unitList[HouseThermalSim.AIR_I] = air;
+                extWall, intWall, cooler, heater);
+        unitList[HouseThermalSimTask.AIR_I] = air;
 
-        thermSim = new HouseThermalSim("House Simulation", this, unitList,
-                true);
+        thermSim = new HouseThermalSimTask("House Simulation", this, unitList,
+                params.initTemp, true);
+        thermSim.setOutSideTemp(100);
+        thermSim.setSolarRadiation(0);
 
         double dtUnit = 1;
         acTask = new HvacUnitTask("AC Opperatons Task", this, dtUnit,
-                false /* not a heater */, 60, 60);
+                false /* not a heater */, 60, 60, thermSim);
         heaterTask = new HvacUnitTask("Heater Opperatons Task", this, dtUnit,
-                true /* a heater */, 90, 90);
+                true /* a heater */, 90, 90, thermSim);
     }
 
     /** get inside temperature
@@ -111,7 +117,7 @@ public class ThermalSys extends TrjSys implements HouseIO
      */
     public boolean getHeaterOnState()
     {
-        return thermSim.getHeaterOn();
+        return heaterTask.getOnState();
     }
 
     /** set the heater on state
@@ -120,7 +126,16 @@ public class ThermalSys extends TrjSys implements HouseIO
      */
     public void setHeaterOnState(boolean state)
     {
-        thermSim.setHeaterOn(state);
+        // if the desired state is on then send the turn on command
+        if (state)
+        {
+            heaterTask.SetCommand(HvacUnitTask.TURN_ON);
+        }
+        // if the desired state is off then send the turn off command
+        else
+        {
+            heaterTask.SetCommand(HvacUnitTask.TURN_OFF);
+        }
     }
 
     /** get the cooler state
@@ -129,7 +144,7 @@ public class ThermalSys extends TrjSys implements HouseIO
      */
     public boolean getCoolerOnState()
     {
-        return thermSim.getCoolerOn();
+        return acTask.getOnState();
     }
 
     /** set the cooler state
@@ -138,6 +153,25 @@ public class ThermalSys extends TrjSys implements HouseIO
      */
     public void setCoolerOnState(boolean state)
     {
-        thermSim.setCoolerOn(state);
+        // if the desired state is on then send the turn on command
+        if (state)
+        {
+            acTask.SetCommand(HvacUnitTask.TURN_ON);
+        }
+        // if the desired state is off then send the turn off command
+        else
+        {
+            acTask.SetCommand(HvacUnitTask.TURN_OFF);
+        }
+    }
+
+    public void setOutsideTemp(double Tout)
+    {
+        thermSim.setOutSideTemp(Tout);
+    }
+
+    public void setSolarRadiation(double sRad)
+    {
+        thermSim.setSolarRadiation(sRad);
     }
 }

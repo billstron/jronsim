@@ -86,16 +86,16 @@ public class HvacThermalUnit extends ThermalUnit
         switch (type)
         {
             case HEATER:
-                this.i = HouseThermalSim.HEATER_I;
+                this.i = HouseThermalSimTask.HEATER_I;
                 this.k1 = this.heatInputMax / 10.0; // BTU /(sec F)
                 this.k2 = 0.05;  // Btu/(sec F) Heat loss to local ambient
                 this.k3 = 1.0;  // Defines air temperature profile
-                this.tempAmbient = 50.0;  // ^oF Ambient temperature
+                this.tempAmbient = 90.0;  // ^oF Ambient temperature
                 // around the heater (assuming basement or garage)
                 break;
             case COOLER:
             default:
-                this.i = HouseThermalSim.COOLER_I;
+                this.i = HouseThermalSimTask.COOLER_I;
                 this.k1 = Math.abs(this.heatInputMax / 16.0);  // BTU /(sec F)
                 this.k2 = 0.01;  // Btu/(sec F) Heat loss to local ambient
                 this.k3 = .6;  // Defines air temperature profile
@@ -146,6 +146,11 @@ public class HvacThermalUnit extends ThermalUnit
         return P;
     }
 
+    double getFanOutletTemp()
+    {
+        return fanOutletTemp;
+    }
+
     /** Get the current fan flow
      *
      * @return
@@ -159,43 +164,41 @@ public class HvacThermalUnit extends ThermalUnit
      *
      * @return
      */
-    public double getFanOutletTemp()
+    private double computeFanOutletTemp(double Tcore, double Tinlet)
     {
-        temperature = x[i];
-        fanInletTemp = x[HouseThermalSim.AIR_I];
+        double Toutlet = 0;
         // compute the Q
         if (fanFlow > 0.0)
         {
-            fanOutletTemp = fanInletTemp +
-                    (temperature - fanInletTemp) *
-                    (1.0 - Math.exp(-1.0 / k3));
+            Toutlet = Tinlet + (Tcore - Tinlet) * (1.0 - Math.exp(-1.0 / k3));
         }
         else
         {
-            fanOutletTemp = temperature;
+            Toutlet = Tcore;
         }
-        return fanOutletTemp;
+        return Toutlet;
     }
 
     /** Get the heat going into the duct air
      * 
      * @return
      */
-    public double getQunitToAir()
+    private double computeQunitToAir(double Tcore, double Tinlet)
     {
-        temperature = x[i];
-        fanInletTemp = x[HouseThermalSim.AIR_I];
+        double q = 0;
+        Tcore = x[i];
+        fanInletTemp = x[HouseThermalSimTask.AIR_I];
         // compute the Q
         if (fanFlow > 0.0)
         {
-            QunitToAir = k1 * (temperature - fanInletTemp) * (1.0 + k3 *
+            q = k1 * (Tcore - fanInletTemp) * (1.0 + k3 *
                     (Math.exp(-1.0 / k3) - 1.0));
         }
         else
         {
-            QunitToAir = 0.0;
+            q = 0.0;
         }
-        return QunitToAir;
+        return q;
     }
 
     /** Compute the derivative of the HvacThermalUnit for the current states and
@@ -206,10 +209,12 @@ public class HvacThermalUnit extends ThermalUnit
     public double getDeriv()
     {
         temperature = x[i];
-        fanInletTemp = x[HouseThermalSim.AIR_I];
+        fanInletTemp = x[HouseThermalSimTask.AIR_I];
+        double outsideTemp = u[HouseThermalSimTask.TOUT_I];
+        double insideTemp = x[HouseThermalSimTask.AIR_I];
         // compute the Q
-        QunitToAir = getQunitToAir();
-        fanOutletTemp = getFanOutletTemp();
+        QunitToAir = computeQunitToAir(temperature, fanInletTemp);
+        fanOutletTemp = computeFanOutletTemp(temperature, fanInletTemp);
         QunitToAmb = (temperature - tempAmbient) * k2;
 
         // Compute the heat going into the air from the unit
@@ -218,24 +223,30 @@ public class HvacThermalUnit extends ThermalUnit
         {
             case HEATER:
                 double COP = heatEfficiency;
-                /// Heat input is reduced as the outside temperature increases.
-                /// the efficiency is product of the Max Efficiency Temp and that efficiency
-                Qout = heatInput * COP / u[HouseThermalSim.TOUT_I];
+                // the efficiency is statically computed using cop
+                Qout = heatInput * COP;
                 P = heatInput;
                 break;
             case COOLER:
             default:
                 double Seer = heatEfficiency;
                 // Compute the heat input based on the COP
-                double cfo = mcap * u[HouseThermalSim.TOUT_I] + bcap;
-                double cfi = mcap * x[HouseThermalSim.AIR_I] + bcap;
+                double cfo = mcap * outsideTemp + bcap;
+                double cfi = mcap * insideTemp + bcap;
                 Qout = heatInput * cfo * cfi;
                 // Compute the power input to the house from the climate control.
                 // Reduce the ac by the computed COP.
                 double acCop82 = Seer / (3.413 * (1 - 0.5 * cd));
                 double acCop95 = acCop82 / (mcop0 * 82 + bcop0);
                 double acCop = acCop95 * cfi * cfo;
-                P = (-Qout / (acCop * 3.413)) * 3600; // watts
+                if (acCop != 0.0)
+                {
+                    P = (-Qout / (acCop * 3.413)) * 3600; // watts
+                }
+                else
+                {
+                    P = Double.POSITIVE_INFINITY;
+                }
                 break;
         }
         // Compute the derivative and return

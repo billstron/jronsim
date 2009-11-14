@@ -32,20 +32,20 @@ package houseSimulation;
 import TranRunJLite.*;
 import ODEsolver.*;
 
-/** Simulates the house
+/** Simulates the house thermal dynamics
  * 
  * @author William Burke <billstron@gmail.com>
  */
-public class HouseThermalSim extends TrjTask
+public class HouseThermalSimTask extends TrjTask
 {
 
     // house parameters
-    ThermalUnit houseList[];
+    private ThermalUnit houseList[];
     private int nStates;
     private int nInputs = 2;
-    double Tout;  ///< guess...
-    double RadSolar;
-    double[] x;  // Current states
+    double Tout;  // Outside Tempetature
+    double RadSolar;  // Solar Radiation
+    double[] states;
     double[] u;  // Current inputs
     // Ode parameters. 
     double tLast;  //  Time at which simulation was last run
@@ -58,18 +58,29 @@ public class HouseThermalSim extends TrjTask
     double[] x0;
     double[] abstol;  // Absolute and relative tolerances
     double reltol;
-    public static final int AIR_I = 0;
+    // State indices
+    public static final int COOLER_I = 0;
     public static final int HEATER_I = 1;
-    public static final int COOLER_I = 2;
+    public static final int EXTWALL_I = 2;
     public static final int INTWALL_I = 3;
-    public static final int EXTWALL_I = 4;
+    public static final int AIR_I = 4;
+    // Input Indices
     public static final int TOUT_I = 0;
     public static final int RAD_I = 1;
 
-    public HouseThermalSim(
+    /** Construct the House Thermal Simulation Task
+     *
+     * @param name
+     * @param sys
+     * @param houseList
+     * @param Tinit
+     * @param useAdaptiveSolver
+     */
+    public HouseThermalSimTask(
             String name,
             TrjSys sys,
             ThermalUnit houseList[],
+            double Tinit,
             boolean useAdaptiveSolver)
     {
         super(name, sys, 0 /*initial state*/, true /*taskActive*/);
@@ -77,17 +88,18 @@ public class HouseThermalSim extends TrjTask
         this.houseList = houseList;
         this.useAdaptiveSolver = useAdaptiveSolver;
         this.nStates = houseList.length;
-        this.x = new double[nStates];
+        this.states = new double[nStates];
         this.x0 = new double[nStates];
         this.abstol = new double[nStates];
         this.u = new double[nInputs];
 
         tLast = 0.0;
+        System.out.println("Tinit = " + Tinit);
         // Create an ODE (simulation) object
         // State variables:
         for (int i = 0; i < nStates; i++)
         {
-            x0[i] = 0.0;  // State variable initial values
+            x0[i] = Tinit;  // State variable initial values
             abstol[i] = 1.e-4;  // Absolute tolerance for adaptive solvers
         }
         reltol = 1.e-4;
@@ -103,6 +115,100 @@ public class HouseThermalSim extends TrjTask
         stepSize = 1.e-4;  // Nominal step size
     }
 
+    /** Set the heater fan state
+     *
+     * @param state
+     */
+    public void setHeaterFanState(boolean state)
+    {
+        // get the heater therma unit
+        HvacThermalUnit heater = (HvacThermalUnit) houseList[HEATER_I];
+        heater.setFanState(state);
+    }
+
+    /** Set the heater input state
+     *
+     * @param state
+     */
+    public void setHeaterInputState(boolean state)
+    {
+        HvacThermalUnit heater = (HvacThermalUnit) houseList[HEATER_I];
+        heater.setHeaterState(state);
+    }
+
+    /** Set the cooler fan state
+     *
+     * @param state
+     */
+    public void setCoolerFanState(boolean state)
+    {
+        // get the heater therma unit
+        HvacThermalUnit cooler = (HvacThermalUnit) houseList[COOLER_I];
+        cooler.setFanState(state);
+    }
+
+    /** Set the Cooler input state
+     *
+     * @param state
+     */
+    public void setCoolerInputState(boolean state)
+    {
+        HvacThermalUnit cooler = (HvacThermalUnit) houseList[COOLER_I];
+        cooler.setHeaterState(state);
+    }
+
+    /** The the current inside temperature
+     *
+     * @return
+     */
+    double getTin()
+    {
+        return states[AIR_I];
+    }
+
+    /** Get the heater duct temperature
+     *
+     * @return
+     */
+    double getHeaterDuctTemp()
+    {
+        HvacThermalUnit heater = (HvacThermalUnit) houseList[HEATER_I];
+        return heater.getFanOutletTemp();
+    }
+
+    /** Get the cooler duct temperature
+     * 
+     * @return
+     */
+    double getCoolerDuctTemp()
+    {
+        HvacThermalUnit cooler = (HvacThermalUnit) houseList[COOLER_I];
+        return cooler.getFanOutletTemp();
+    }
+
+    /** Set the outside Temperature
+     *
+     * @param Tout
+     */
+    public void setOutSideTemp(double Tout)
+    {
+        this.Tout = Tout;
+    }
+
+    /** Set the Solar Radiation
+     * 
+     * @param sRad
+     */
+    public void setSolarRadiation(double sRad)
+    {
+        this.RadSolar = sRad;
+    }
+
+    /** Find out when to run the task
+     *
+     * @param sys
+     * @return
+     */
     public boolean RunTaskNow(TrjSys sys)
     {
         // The simulation runs all the time and has no states.
@@ -120,13 +226,18 @@ public class HouseThermalSim extends TrjTask
         }
     }
 
+    /** Run the task
+     *
+     * @param sys
+     * @return
+     */
     public boolean RunTask(TrjSys sys)
     {
-        // The simulation runs all the time and has no states.
-        // This method just moves the simulation forward to the
-        // current time.
-        // Run the simulation to the current time
 
+        // Update the inputs
+        u[TOUT_I] = Tout;
+        u[RAD_I] = RadSolar;
+        // Run the simulation to the current time
         tCur = sys.GetRunningTime();
         if (useAdaptiveSolver)
         {
@@ -137,22 +248,39 @@ public class HouseThermalSim extends TrjTask
         {
             hs.multiStepFixed(tCur - tLast, stepSize);
         }
+        /*System.out.printf("states: %f, %f, %f, %f, %f\n", states[0], states[1],
+        states[2], states[3], states[4]);
+         */
         tLast = tCur;
         return false;
     }
 
-    // Create an inner class for the simulation
+    /** Innter class the operates the differential equation solver
+     *
+     */
     public class HouseODE extends RKF45
     {
 
+        /** Constructs the ODE solver class
+         *
+         * @param nn
+         * @param xx0
+         * @param t0
+         * @param abstol
+         * @param reltol
+         */
         public HouseODE(int nn, double xx0[], double t0,
                 double[] abstol, double reltol)
         {
             super(nn, xx0, t0, abstol, reltol);
         }
 
+        /** Compute the derivative
+         *
+         */
         public void deriv()
         {
+            states = x;
             // update the informatoin for each state.
             for (int k = 0; k < nStates; k++)
             {

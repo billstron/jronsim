@@ -40,7 +40,8 @@ import thermostat.*;
  * 
  * @author William Burke <billstron@gmail.com>
  */
-public class IpctHouse {
+public class IpctHouse
+{
 
     private String name;
     private TrjTime tm;
@@ -53,20 +54,26 @@ public class IpctHouse {
      * @param name -- the private name of the house
      * @param tm -- the timer the house is to use.  
      */
-    public IpctHouse(String name, TrjTime tm) {
+    public IpctHouse(String name, TrjTime tm)
+    {
 
         this.name = name;
         this.tm = tm;
 
-        try {
+        try
+        {
             FileWriter fW = new FileWriter("dataFile0.txt");
             dataFile0 = new PrintWriter(fW);
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             System.out.println("IO Error " + e);
             System.exit(1);  // File error -- quit
         }
 
-        therm = new ThermalSys("Basic House", tm);
+        // Create the thermal system with the default parameters
+        therm = new ThermalSys("Default House", tm);
+        // Create the thermostat
         tstat = new ThermostatSys("Basic Thermostat", tm, therm, true);
     }
 
@@ -74,12 +81,18 @@ public class IpctHouse {
      * 
      * @return indicates the need to stop the program (true, false)
      */
-    boolean run() {
+    boolean run()
+    {
         //System.out.println("here");
         boolean stop = false;
-        TrjSys syss[] = {therm, tstat};
-        for (TrjSys sys : syss) {
-            if (stop = sys.RunTasks()) {
+        TrjSys syss[] =
+        {
+            therm, tstat
+        };
+        for (TrjSys sys : syss)
+        {
+            if (stop = sys.RunTasks())
+            {
                 break; // Run all of the tasks
             }
         }
@@ -90,7 +103,8 @@ public class IpctHouse {
     /** exit function that cleans before final shutdown.
      * 
      */
-    void exit() {
+    void exit()
+    {
         System.out.println("exited");
         dataFile0.close();
     }
@@ -98,19 +112,19 @@ public class IpctHouse {
     /** Log function for the house system.
      * 
      */
-    void log() {
-        //System.out.println("here1");
+    void log()
+    {
         dataFile0.printf("%6.3f\t %3.3f\t %s\n", tm.getRunningTime(),
                 therm.getTempInside(),
                 Boolean.toString(therm.getCoolerOnState()));
-        //System.out.println("here2");
     }
 
     /** Test function
      * 
      * @param args
      */
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         double dt = 5.0;  // Used for samples that need a time delta
         double tFinal = 24 * 60 * 60;  // sec
         TrjTimeAccel tm = new TrjTimeAccel(300);
@@ -126,7 +140,8 @@ public class IpctHouse {
  * 
  * @author WJBurke
  */
-class IpctHouseRunnable implements Runnable {
+class IpctHouseRunnable implements Runnable
+{
 
     private double dt;
     private double dtLog;
@@ -142,7 +157,8 @@ class IpctHouseRunnable implements Runnable {
      * @param tm -- timing structure
      * @param hs -- the ipctHouse that is made implementable
      */
-    IpctHouseRunnable(double dt, double tFinal, TrjTime tm, IpctHouse hs) {
+    IpctHouseRunnable(double dt, double tFinal, TrjTime tm, IpctHouse hs)
+    {
         this.dt = dt;
         this.dtLog = 30;
         this.tLogNext = 0;
@@ -154,11 +170,14 @@ class IpctHouseRunnable implements Runnable {
     /** run functions
      * 
      */
-    public void run() {
+    public void run()
+    {
         boolean stop = false;
-        while (tm.getRunningTime() <= tFinal && !stop) {
+        while (tm.getRunningTime() <= tFinal && !stop)
+        {
             stop = hs.run();
-            if (tm.getRunningTime() >= tLogNext) {
+            if (tm.getRunningTime() >= tLogNext)
+            {
                 hs.log();
                 //System.out.println("here");
                 tLogNext += dtLog;
