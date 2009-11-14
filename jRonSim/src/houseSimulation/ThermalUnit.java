@@ -94,9 +94,9 @@ public abstract class ThermalUnit
      *
      * @param x
      */
-    public void setStates(double[] x)
+    public void setStates(double[] states)
     {
-        this.x = x;
+        this.x = states;
     }
 
     /** Update the current u to the system.

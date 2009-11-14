@@ -37,21 +37,18 @@ package houseSimulation;
 class WallThermalUnit extends ThermalUnit
 {
 
+    private double QToAir, QToAmb;
+
     /** Constructs the Thermal Unit for Internal and External Walls.
      *
      * @param m
      * @param kAir
      * @param kAmb -- Set to zero for Internal Walls
      */
-    public WallThermalUnit(double m, double kAir, double kAmb)
+    public WallThermalUnit(double m, int iState, double kAir, double kAmb)
     {
         super(5, 2);
-        this.temperature = 76.0;  // ^oF Initial temperature
-        this.m = m; // typ 1581 * .8 * 17 lb
-        this.cp = 0.29;  // BTU/(lb F)
-        this.cpAir = 0.24;  // BTU/(lb F)
-        this.k1 = kAir;  // typ 0.6475
-        this.k2 = kAmb;  // typ 0.6475
+        WallThermalUnitInit(m, iState, kAir, kAmb);
     }
 
     /** Constructs the Thermal Unit for Internal Walls.
@@ -59,33 +56,57 @@ class WallThermalUnit extends ThermalUnit
      * @param m
      * @param kAir
      */
-    public WallThermalUnit(double m, double kAir){
+    public WallThermalUnit(double m, int iState, double kAir)
+    {
         super(5, 2);
+        WallThermalUnitInit(m, iState, kAir, 0.0);
+    }
+
+    /** Initializes the class
+     * 
+     * @param m
+     * @param iState
+     * @param kAir
+     * @param kAmb
+     */
+    private void WallThermalUnitInit(double m, int iState, double kAir, double kAmb)
+    {
+        this.i = iState;
         this.temperature = 76.0;  // ^oF Initial temperature
-        this.m = m; // typ 1581 * .8 * 17 lb
-        this.cp = 0.29;  // BTU/(lb F)
-        this.cpAir = 0.24;  // BTU/(lb F)
-        this.k1 = kAir;  // typ 0.6475
-        this.k2 = 0;
+        this.m = m;
+        this.cp = 0.29;
+        this.cpAir = 0.24;
+        this.k1 = kAir;
+        this.k2 = kAmb;
     }
 
     public double getQToAir()
     {
-        temperature = x[i];
-        return (x[HouseThermalSim.AIR_I] - temperature) * k1;
+        return QToAir;
     }
 
-    private double getQToAmbient()
+    private double computeQToAmbient(double outsideTemp)
     {
-        temperature = x[i];
-        return (u[HouseThermalSim.TOUT_I] - temperature) * k2;
+        return (outsideTemp - temperature) * k2;
+    }
+
+    private double computeQToAir(double insideTemp)
+    {
+        return (insideTemp - temperature) * k1;
     }
 
     @Override
     public double getDeriv()
     {
+        // get the most current variables
         temperature = x[i];
-        double dx = (getQToAir() + getQToAmbient()) / (cp * m);
+        double insideTemp = x[HouseThermalSimTask.AIR_I];
+        double outsideTemp = u[HouseThermalSimTask.TOUT_I];
+
+        // compute the derivative
+        QToAir = computeQToAir(insideTemp);
+        QToAmb = computeQToAmbient(outsideTemp);
+        double dx = (QToAir + QToAmb) / (cp * m);
         return dx;
     }
 }

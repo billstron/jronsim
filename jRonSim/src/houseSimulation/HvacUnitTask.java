@@ -50,7 +50,7 @@ public class HvacUnitTask extends TrjTask
     private double fanTon, fanToff;
     private double Pdemand;  // current power demand
     private double Tduct;  // Current duct exit temperature
-    private HvacThermalUnit thermUnit; // the thermal unit being controlled
+    private HouseThermalSimTask thermTask; // the thermal unit being controlled
     /** private state definitions
      */
     private final int STATE_OFF = 0;
@@ -59,8 +59,8 @@ public class HvacUnitTask extends TrjTask
     private final int STATE_POST = 3;
     /** Public commands to the unit.  
      */
-    public final int TURN_OFF = 0;
-    public final int TURN_ON = 1;
+    public static final int TURN_OFF = 0;
+    public static final int TURN_ON = 1;
 
     /** Construct the HVAC Unit Task.
      * 
@@ -72,7 +72,7 @@ public class HvacUnitTask extends TrjTask
      * @param fanToff -- Temp to turn fan off.
      */
     public HvacUnitTask(String name, TrjSys sys, double dt, boolean heater,
-            double fanTon, double fanToff)
+            double fanTon, double fanToff, HouseThermalSimTask thermTask)
     {
         super(name, sys, 0/*Initial State*/, true/*active*/);
 
@@ -81,6 +81,7 @@ public class HvacUnitTask extends TrjTask
         stateNames.add("On State");
         stateNames.add("Off Energy Extraction State");
 
+        this.thermTask = thermTask;
         this.dtNominal = dt;
         this.heater = heater;
         this.fanTon = fanTon;
@@ -106,23 +107,60 @@ public class HvacUnitTask extends TrjTask
         return state;
     }
 
-    /** Returns the current power demand of the HVAC Unit.
+    /** Put the fan state into the thermal sim
+     *
+     * @param b
+     */
+    private void putFanState(boolean b)
+    {
+        // if it is a heater then set the heater fan
+        if (heater)
+        {
+            thermTask.setHeaterFanState(b);
+        }
+        // if it is a cooler, then set the cooler fan
+        else
+        {
+            thermTask.setCoolerFanState(b);
+        }
+    }
+
+    /** Put the input state into the thermal simulation
+     *
+     * @param b
+     */
+    private void putInputState(boolean b)
+    {
+        // if it is a heater then set the heater input
+        if (heater)
+        {
+            thermTask.setHeaterInputState(b);
+        }
+        // if it is a cooler, then set the cooler input
+        else
+        {
+            thermTask.setCoolerInputState(b);
+        }
+    }
+
+    /** Get the duct temperature
      * 
      * @return
      */
-    public double getPowerDemand()
+    private double getDuctTemp()
     {
-        return Pdemand;
-    }
-
-    private void putFanState(boolean b)
-    {
-        thermUnit.setFanState(b);
-    }
-
-    private void putInputState(boolean b)
-    {
-        thermUnit.setHeaterState(b);
+        double T;  // initialize the output variable
+        // if this is a heater, get the heater duct temp
+        if (heater)
+        {
+            T = thermTask.getHeaterDuctTemp();
+        }
+        // otherwise get the cooler duct temp
+        else
+        {
+            T = thermTask.getCoolerDuctTemp();
+        }
+        return T;
     }
 
     /** Tells when to run the task.
@@ -131,7 +169,7 @@ public class HvacUnitTask extends TrjTask
      * @return
      */
     @Override
-    public boolean RunTask(TrjSys sys)
+    public boolean RunTaskNow(TrjSys sys)
     {
         return CheckTime(sys.GetRunningTime());
     }
@@ -142,12 +180,11 @@ public class HvacUnitTask extends TrjTask
      * @return
      */
     @Override
-    public boolean RunTaskNow(TrjSys sys)
+    public boolean RunTask(TrjSys sys)
     {
         // Get the duck temperature
-        Tduct = thermUnit.getFanOutletTemp();
-        // get the power demand
-        Pdemand = thermUnit.getP();
+        Tduct = getDuctTemp();
+
         // run the states
         switch (currentState)
         {

@@ -69,6 +69,7 @@ public class ThermalParams
     public ThermalParams()
     {
         initTemp = 76.6;
+        
         heaterMass = 30;
         heaterfanMax = (2400 * 0.075) / 60.0;
         heaterHeatInputMax = 70000.0 / 3600.0;
@@ -85,8 +86,10 @@ public class ThermalParams
         windowArea = 225; // ft^2 (ext 91)
         internalInput = 2880 / 3600; // btu/hr -> btu/s
         infiltrationFlow = (8325 * 0.075) / 3600; // ft^3/hr -> lb/s (ext 3375)
+
         intWallMass = (740 + 2 * 13290) * .5 * 5; // lb
-        intWallKair = 500;  // 100
+        intWallKair = 500;  // 500
+        
         extWallMass = 1581 * .8 * 17;  // lb
         extWallKair = 0.6475;  //(ext 0.2625)
         extWallKamb = 0.6475;  //(ext 0.2625)

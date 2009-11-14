@@ -263,10 +263,10 @@ public class UserInterfaceTask extends TrjTask implements UserInterfaceIO {
         }
         if (System.currentTimeMillis() <= tDispTsp) {
             labelAuxMsg = "Setpoint";
-            auxDisplay = String.format("%3.0f", Tsp);
+            auxDisplay = String.format("%03.1f", Tsp);
         } else {
             labelAuxMsg = "Temperature";
-            auxDisplay = String.format("%3.0f", Tin);
+            auxDisplay = String.format("%03.1f", Tin);
         }
         mainDisplay = "";
         return false;
