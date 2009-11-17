@@ -41,7 +41,8 @@ import java.util.ArrayList;
  * 
  * @author William Burke <billstron@gmail.com>
  */
-public class GoalSeekerTask extends TrjTask {
+public class GoalSeekerTask extends TrjTask
+{
 
     private ArrayList<TrjState> states = new ArrayList<TrjState>();
     private double dt;
@@ -69,12 +70,10 @@ public class GoalSeekerTask extends TrjTask {
      * @param ui -- user interface task.  
      * @param dt
      */
-    public GoalSeekerTask(String name, TrjSys sys,
-            SupervisorTask supervisor,
-            CoordinatorTask coordinator,
-            UserInterfaceTask ui,
-            ComTask com,
-            double dt) {
+    public GoalSeekerTask(String name, TrjSys sys, SupervisorTask supervisor,
+            CoordinatorTask coordinator, UserInterfaceTask ui,
+            ComTask com, double dt)
+    {
         super(name, sys, 0 /*initial state*/, true /*start active*/);
 
         // add the states
@@ -102,10 +101,13 @@ public class GoalSeekerTask extends TrjTask {
      * @param msg
      * @return
      */
-    int nextTransition(Message msg) {
+    int nextTransition(Message msg)
+    {
         int next = -1; // default is no transition.
-        if (msg != null) {
-            switch (msg.getType()) {
+        if (msg != null)
+        {
+            switch (msg.getType())
+            {
                 case INFO:
                     break;
                 case DR_SETPOINT:
@@ -123,7 +125,8 @@ public class GoalSeekerTask extends TrjTask {
      * @param sys The system in which this task is embedded
      * @return "true" if this task is ready to run
      */
-    public boolean RunTaskNow(TrjSys sys) {
+    public boolean RunTaskNow(TrjSys sys)
+    {
         //System.out.println("<GoalSeekerTask> RunTaskNow");
         return CheckTime(sys.GetRunningTime());
     }
@@ -133,7 +136,8 @@ public class GoalSeekerTask extends TrjTask {
      * @param sys
      * @return
      */
-    public boolean RunTask(TrjSys sys) {
+    public boolean RunTask(TrjSys sys)
+    {
         //System.out.println("here");
         // run the state defined by the tran run system
         states.get(this.currentState).run(sys.GetRunningTime());

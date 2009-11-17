@@ -52,11 +52,33 @@ public class ThermalSys extends TrjSys implements HouseIO
     public ThermalSys(String name, TrjTime tm)
     {
         super(tm);
-        this.name = name;
-        ThermalUnit[] unitList = new ThermalUnit[5];
-
         // Create some default parameters
         ThermalParams params = new ThermalParams();
+        ThermalSysInit(name, params);
+    }
+
+    /** Construct the thermal simulation using specified parameters.
+     * 
+     * @param name
+     * @param tm
+     * @param params
+     */
+    public ThermalSys(String name, TrjTime tm, ThermalParams params)
+    {
+        super(tm);
+        ThermalSysInit(name, params);
+    }
+
+    /** Initalize the Thermal System
+     * 
+     * @param name
+     * @param params
+     */
+    private void ThermalSysInit(String name, ThermalParams params)
+    {
+        this.name = name;
+
+        ThermalUnit[] unitList = new ThermalUnit[5];
         // Construct the cooler unit
         HvacThermalUnit cooler = new HvacThermalUnit(HvacThermalUnit.COOLER,
                 params.coolerMass,
@@ -163,6 +185,15 @@ public class ThermalSys extends TrjSys implements HouseIO
         {
             acTask.SetCommand(HvacUnitTask.TURN_OFF);
         }
+    }
+
+    /** get the outside temperature
+     * 
+     * @return
+     */
+    public double getOutsideTemp()
+    {
+        return thermSim.getTout();
     }
 
     /** Set the current outside temperature
