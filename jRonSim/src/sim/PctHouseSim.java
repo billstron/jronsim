@@ -28,35 +28,32 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package aggregator;
+package sim;
 
-import TranRunJLite.TrjSys;
-import TranRunJLite.TrjTask;
+import TranRunJLite.TrjTimeAccel;
+import house.PctHouse;
+import house.PctHouseRunnable;
 
 /**
  *
  * @author William Burke <billstron@gmail.com>
  */
-public abstract class SystemicControlTask extends TrjTask
+public class PctHouseSim
 {
 
-    private double dtLog;
-    private NeighborhoodTask hood = null;
-
-    public SystemicControlTask(String name, TrjSys sys, double dt, double dtLog,
-            NeighborhoodTask hood)
+    /** Test function
+     *
+     * @param args
+     */
+    public static void main(String[] args)
     {
-        super(name, sys, 0/*Initial State*/, true/*active*/);
-        this.dtNominal = dt;
-        this.stateNames.add("Run Houses");
+        double dt = 5.0;  // Used for samples that need a time delta
+        double tFinal = 24 * 60 * 60;  // sec
+        TrjTimeAccel tm = new TrjTimeAccel(300);
+        PctHouse hs = new PctHouse(tm, true);
 
-        this.dtLog = dtLog;
-        this.hood = hood;
-    }
-
-    @Override
-    public boolean RunTaskNow(TrjSys sys)
-    {
-        return CheckTime(sys.GetRunningTime());
+        PctHouseRunnable runner = new PctHouseRunnable(dt, tFinal, tm, hs);
+        Thread t = new Thread(runner);
+        t.start();
     }
 }

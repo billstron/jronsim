@@ -41,9 +41,7 @@ public class PctHouseRunnable implements Runnable
 {
 
     private double dt;
-    private double dtLog;
     private double tFinal;
-    private double tLogNext;
     private TrjTime tm;
     private final PctHouse hs;
 
@@ -54,11 +52,9 @@ public class PctHouseRunnable implements Runnable
      * @param tm -- timing structure
      * @param hs -- the ipctHouse that is made implementable
      */
-    PctHouseRunnable(double dt, double tFinal, TrjTime tm, PctHouse hs)
+    public PctHouseRunnable(double dt, double tFinal, TrjTime tm, PctHouse hs)
     {
         this.dt = dt;
-        this.dtLog = 30;
-        this.tLogNext = 0;
         this.tFinal = tFinal;
         this.tm = tm;
         this.hs = hs;
@@ -73,15 +69,8 @@ public class PctHouseRunnable implements Runnable
         while (tm.getRunningTime() <= tFinal && !stop)
         {
             stop = hs.run();
-            if (tm.getRunningTime() >= tLogNext)
-            {
-                hs.log();
-                //System.out.println("here");
-                tLogNext += dtLog;
-            }
             tm.incrementRunningTime(dt);
         }
-        hs.exit();
         System.out.println("Simulation Stopped");
         System.exit(0);
     }

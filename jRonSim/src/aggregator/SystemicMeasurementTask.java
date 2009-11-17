@@ -28,35 +28,13 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package aggregator;
 
-import TranRunJLite.TrjSys;
-import TranRunJLite.TrjTask;
+package aggregator;
 
 /**
  *
  * @author William Burke <billstron@gmail.com>
  */
-public abstract class SystemicControlTask extends TrjTask
-{
+public class SystemicMeasurementTask {
 
-    private double dtLog;
-    private NeighborhoodTask hood = null;
-
-    public SystemicControlTask(String name, TrjSys sys, double dt, double dtLog,
-            NeighborhoodTask hood)
-    {
-        super(name, sys, 0/*Initial State*/, true/*active*/);
-        this.dtNominal = dt;
-        this.stateNames.add("Run Houses");
-
-        this.dtLog = dtLog;
-        this.hood = hood;
-    }
-
-    @Override
-    public boolean RunTaskNow(TrjSys sys)
-    {
-        return CheckTime(sys.GetRunningTime());
-    }
 }

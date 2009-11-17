@@ -37,21 +37,31 @@ import TranRunJLite.TrjTask;
  *
  * @author William Burke <billstron@gmail.com>
  */
-public abstract class SystemicControlTask extends TrjTask
+public class SystemicMeasureTask extends TrjTask
 {
 
-    private double dtLog;
-    private NeighborhoodTask hood = null;
+    private double Tout;
+    private double solRad;
+    private double Pagg;
+    private NeighborhoodTask hood;
 
-    public SystemicControlTask(String name, TrjSys sys, double dt, double dtLog,
+    public SystemicMeasureTask(String name, TrjSys sys, double dt,
             NeighborhoodTask hood)
     {
-        super(name, sys, 0/*Initial State*/, true/*active*/);
+        super(name, sys, 0, true);
         this.dtNominal = dt;
-        this.stateNames.add("Run Houses");
 
-        this.dtLog = dtLog;
         this.hood = hood;
+
+    }
+
+    @Override
+    public boolean RunTask(TrjSys sys)
+    {
+        Pagg = hood.getAggregatePower();
+        Tout = hood.getOutsideTemp();
+        solRad = hood.getSolarRadiation();
+        return false;
     }
 
     @Override
