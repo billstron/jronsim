@@ -95,7 +95,7 @@ public class HouseThermalSimTask extends TrjTask
         this.u = new double[nInputs];
 
         tLast = 0.0;
-        System.out.println("Tinit = " + Tinit);
+        //System.out.println("Tinit = " + Tinit);
         // Create an ODE (simulation) object
         // State variables:
         for (int i = 0; i < nStates; i++)
@@ -265,6 +265,15 @@ public class HouseThermalSimTask extends TrjTask
         }
         tLast = tCur;
         return false;
+    }
+
+    /** Return the outside temperature
+     * 
+     * @return
+     */
+    double getTout()
+    {
+        return this.Tout;
     }
 
     /** Innter class the operates the differential equation solver
