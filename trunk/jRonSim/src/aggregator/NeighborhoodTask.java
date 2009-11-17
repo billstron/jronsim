@@ -32,14 +32,16 @@ package aggregator;
 
 import TranRunJLite.TrjSys;
 import TranRunJLite.TrjTask;
+import aggregator.environment.Envelope;
 import house.PctHouse;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
  *
  * @author William Burke <billstron@gmail.com>
  */
-public class NeighborhoodTask extends TrjTask
+public class NeighborhoodTask extends TrjTask implements Envelope
 {
 
     private ArrayList<PctHouse> houseList = null;
@@ -48,16 +50,37 @@ public class NeighborhoodTask extends TrjTask
     private double Tout = 90;
     private double solRad = 0;
     private double Pagg = 0;
+    private PrintWriter logFile = null;
 
-    public NeighborhoodTask(String name, TrjSys sys, double dt, double dtLog,
+    /** Construct the NeighborhoodTask composed of a list of houses.
+     * 
+     * @param name
+     * @param sys
+     * @param dt
+     * @param dtLog
+     * @param houseList
+     */
+    public NeighborhoodTask(String name, TrjSys sys, double dt,
             ArrayList<PctHouse> houseList)
     {
         super(name, sys, 0/*Initial State*/, true/*active*/);
         this.dtNominal = dt;
         this.stateNames.add("Run Houses");
+        this.houseList = houseList;
+
+        this.dtLog = Double.POSITIVE_INFINITY;
+    }
+
+    public NeighborhoodTask(String name, TrjSys sys, double dt,
+            ArrayList<PctHouse> houseList, double dtLog, PrintWriter logFile)
+    {
+        super(name, sys, 0/*Initial State*/, true/*active*/);
+        this.dtNominal = dt;
+        this.stateNames.add("Run Houses");
+        this.houseList = houseList;
 
         this.dtLog = dtLog;
-        this.houseList = houseList;
+        this.logFile = logFile;
     }
 
     /** Get the most recent aggregate power consumption.
@@ -69,14 +92,59 @@ public class NeighborhoodTask extends TrjTask
         return Pagg;
     }
 
+    /** Get the outside temperature.
+     * 
+     * @return
+     */
     public double getOutsideTemp()
     {
         return Tout;
     }
 
+    /** Get the solar radiation
+     *
+     * @return
+     */
     public double getSolarRadiation()
     {
         return solRad;
+    }
+
+    /** Set the solar radiation
+     *
+     * @param rad
+     */
+    public void setSolarRadiation(double rad)
+    {
+        solRad = rad;
+    }
+
+    /** Set the Outside Temperature
+     *
+     * @param Tout
+     */
+    public void setOutsideTemp(double Tout)
+    {
+        this.Tout = Tout;
+    }
+
+    private void log()
+    {
+        if (logFile != null)
+        {
+            //System.out.println("here1");
+            // Print the neighborhood state
+            logFile.printf("%6.2f, %6.2f, %6.2f, %6.2f", sys.GetRunningTime(), Tout,
+                    solRad, Pagg);
+            // Then print the state of each house.
+            for (PctHouse hs : houseList)
+            {
+                logFile.printf(", ");
+                hs.log(logFile);
+            }
+            // Finally send the return.
+            logFile.println();
+        }
     }
 
     /** Runs the task.  The only thing it does is update the environmental
@@ -101,17 +169,17 @@ public class NeighborhoodTask extends TrjTask
                 // run the house
                 stop = hs.run();
                 Pagg += hs.getP();
-                // log when it is time.  
-                if (sys.GetRunningTime() >= tLogNext)
-                {
-                    hs.log();
-                    tLogNext += dtLog;
-                }
             }
             else  // if the flag is true, stop
             {
                 break;  // break from the for loop
             }
+        }
+        // log when it is time.
+        if (sys.GetRunningTime() >= tLogNext)
+        {
+            log();
+            tLogNext += dtLog;
         }
         return stop;
     }

@@ -32,6 +32,11 @@ package aggregator;
 
 import TranRunJLite.TrjSys;
 import TranRunJLite.TrjTime;
+import aggregator.environment.Envelope;
+import aggregator.environment.EnviroConditionsTask;
+import house.PctHouse;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 
 /**
  *
@@ -42,12 +47,65 @@ public class SystemicSys extends TrjSys
 
     private NeighborhoodTask hood;
     private MeasureTask measure;
-    private SystemicControlTask cont;
+    private SystemicControlTask control;
+    private EnviroConditionsTask enviro;
     private String name;
 
-    public SystemicSys(String name, TrjTime tm)
+    public SystemicSys(String name, TrjTime tm, ArrayList<PctHouse> houseList)
     {
         super(tm);
         this.name = name;
+
+        // Create the neighborhood task
+        double dtHood = 10;
+        hood = new NeighborhoodTask("Neighborhood Task", this, dtHood,
+                houseList);
+
+        // Create the measurement task
+        double dtMeasure = 30;
+        measure = new MeasureTask("Measurement Task", this, dtMeasure, hood);
+
+        // Create the systemic control task
+        double dtControl = 30;
+        double dtControlLog = 60;
+        control = new SingleMessageControlTask("Single Message Control Task", this,
+                dtControl, dtControlLog, hood);
+
+        // Create the environmental conditions
+        ArrayList<Envelope> face = new ArrayList<Envelope>(1);
+        face.add(hood);
+        double dtEnviro = 30;
+        enviro = new EnviroConditionsTask("Environment Task", this, dtEnviro,
+                face);
+    }
+
+    public SystemicSys(String name, TrjTime tm, ArrayList<PctHouse> houseList,
+            double dtLog, PrintWriter hoodLog, PrintWriter ControlLog,
+            PrintWriter MeasureLog)
+    {
+        super(tm);
+        this.name = name;
+
+        // Create the neighborhood task
+        double dtHood = 10;
+        hood = new NeighborhoodTask("Neighborhood Task", this, dtHood,
+                houseList, dtLog, hoodLog);
+
+        // Create the measurement task
+        double dtMeasure = 30;
+        measure = new MeasureTask("Measurement Task", this, dtMeasure, hood);
+
+        // Create the systemic control task
+        double dtControl = 30;
+        double dtControlLog = 60;
+        control = new SingleMessageControlTask("Single Message Control Task", this,
+                dtControl, dtControlLog, hood);
+
+        // Create the environmental conditions
+        ArrayList<Envelope> face = new ArrayList<Envelope>(1);
+        face.add(hood);
+        double dtEnviro = 30;
+        enviro = new EnviroConditionsTask("Environment Task", this, dtEnviro,
+                face);
     }
 }

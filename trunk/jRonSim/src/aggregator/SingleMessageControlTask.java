@@ -31,19 +31,18 @@
 package aggregator;
 
 import TranRunJLite.TrjSys;
-import TranRunJLite.TrjTask;
 
 /**
  *
  * @author William Burke <billstron@gmail.com>
  */
-public class SingleMessageControlTask extends TrjTask
+public class SingleMessageControlTask extends SystemicControlTask
 {
 
-    public SingleMessageControlTask(String name, TrjSys sys, double dt)
+    public SingleMessageControlTask(String name, TrjSys sys, double dt,
+            double dtLog, NeighborhoodTask hood)
     {
-        super(name, sys, 0, true);
-        this.dtNominal = dt;
+        super(name, sys, dt, dtLog, hood);
     }
 
     @Override
@@ -51,11 +50,5 @@ public class SingleMessageControlTask extends TrjTask
     {
         // nothing to do here yet.
         return false;
-    }
-
-    @Override
-    public boolean RunTaskNow(TrjSys sys)
-    {
-        return CheckTime(sys.GetRunningTime());
     }
 }
