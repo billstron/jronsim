@@ -72,7 +72,18 @@ public class EnviroConditionsTask extends TrjTask
 
         // Create the condition models.  
         this.solarModel = new SolarRadiationModel(location);
-        this.ToutModel = new OutsideTemperatureModel();
+        //this.ToutModel = new OutsideTemperatureModel();
+        try
+        {
+            this.ToutModel = new OutsideTempNrelData(
+                    "/data/Cal/weatherData/KSCK_20070228-20071015.CSV");
+        }
+        catch (Exception e)
+        {
+            System.out.println("Exception: Problem creating the outside temperature model.");
+            System.out.println("\tUsing a constant instead.");
+            this.ToutModel = new OutsideTemperatureModel();
+        }
 
         this.Tout = 100;
         this.Rad = 0;
@@ -89,7 +100,7 @@ public class EnviroConditionsTask extends TrjTask
     {
         // Get the current radiation and outside temperature.  
         Rad = solarModel.computeRadiation(sys.GetCalendar());
-        Tout = 75;
+        Tout = ToutModel.getTemperature(sys.GetCalendar());
 
         // Set the information into the houses.  
         for (Envelope env : houses)
