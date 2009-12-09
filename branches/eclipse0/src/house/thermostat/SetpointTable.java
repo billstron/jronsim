@@ -42,9 +42,10 @@ import java.util.GregorianCalendar;
  * 
  * @author William Burke <billstron@gmail.com>
  */
+@SuppressWarnings("unchecked")
 public class SetpointTable {
 
-    private ArrayList<Setpoint>[] table;// = new ArrayList<Setpoint>[7];
+    private ArrayList<Setpoint>[] table = (ArrayList<Setpoint>[]) new ArrayList[7];
 
     /** Constructs the setpoint table.
      * 
@@ -54,7 +55,7 @@ public class SetpointTable {
         int hour = 6;
         int min = 0;
         Setpoint.Label label = Setpoint.Label.MORNING;
-        table = new ArrayList[7];
+        //table = new ArrayList[7];
         for (int day = 0; day < table.length; day++) {
             table[day] = new ArrayList<Setpoint>();
             Setpoint sp = new Setpoint(Tsp, hour, min, label);
