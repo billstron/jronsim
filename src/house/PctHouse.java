@@ -170,12 +170,13 @@ public class PctHouse implements Envelope
         ThermalSys therm = (ThermalSys) sysList.get(THERM_I);
         if (logFile != null)
         {
-            logFile.printf("%d, %6.2f, %6.2f, %6.2f, %6.2f",
+            logFile.printf("%d,\t %6.2f,\t %6.2f,\t %6.2f,\t %6.2f\n",
                     idNum,
                     tm.getRunningTime(),
                     therm.getOutsideTemp(),
                     therm.getTempInside(),
                     therm.getP());
+            logFile.println();
         }
     }
 

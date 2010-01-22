@@ -55,5 +55,6 @@ public class PctHouseSim
         PctHouseRunnable runner = new PctHouseRunnable(dt, tFinal, tm, hs);
         Thread t = new Thread(runner);
         t.start();
+        
     }
 }

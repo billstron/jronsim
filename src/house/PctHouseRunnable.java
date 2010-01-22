@@ -30,6 +30,8 @@
  */
 package house;
 
+import java.io.*;
+
 import TranRunJLite.TrjTime;
 import TranRunJLite.TrjTimeAccel;
 
@@ -44,7 +46,13 @@ public class PctHouseRunnable implements Runnable
     private double tFinal;
     private TrjTime tm;
     private final PctHouse hs;
-
+ 
+ /*   
+    File dataFile = new File("PctHouseSim_data.txt");
+    //to specify a certain file location use File("C://")
+    //add code to clear file
+    PrintWriter out = null;
+*/
     /** Constructor for the implementable house.
      *
      * @param dt -- time step
@@ -65,10 +73,20 @@ public class PctHouseRunnable implements Runnable
      */
     public void run()
     {
+    	/*
+    	//setup data logger
+        try{
+        	out = new PrintWriter(new FileWriter (dataFile));
+        } catch(IOException e){
+        	System.err.println("Error creating PrintWriter for data output");
+        }
+        */
+    	
         boolean stop = false;
         while (tm.getRunningTime() <= tFinal && !stop)
         {
             stop = hs.run();
+            //hs.log(out);		//do logging
             tm.incrementRunningTime(dt);
         }
         System.out.println("Simulation Stopped");
@@ -79,6 +97,7 @@ public class PctHouseRunnable implements Runnable
      *
      * @param args
      */
+    
     public static void main(String[] args)
     {
         double dt = 5.0;  // Used for samples that need a time delta
@@ -90,4 +109,5 @@ public class PctHouseRunnable implements Runnable
         Thread t = new Thread(runner);
         t.start();
     }
+ 
 }
