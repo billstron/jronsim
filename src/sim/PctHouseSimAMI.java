@@ -32,13 +32,14 @@ package sim;
 
 import TranRunJLite.TrjTimeAccel;
 import house.PctHouse;
-import house.PctHouseRunnable;
+import house.PctHouseRunnableAMI;
+import gatewayComm.AmiCommSetup;
 
 /**
  *
  * @author William Burke <billstron@gmail.com>
  */
-public class PctHouseSim
+public class PctHouseSimAMI
 {
 
     /** Test function
@@ -48,13 +49,14 @@ public class PctHouseSim
     public static void main(String[] args)
     {
     	//setup network communications with the Gateway
+    	AmiCommSetup ami = new AmiCommSetup();
     	
         double dt = 5.0;  // Used for samples that need a time delta
         double tFinal = 24 * 60 * 60;  // sec
         TrjTimeAccel tm = new TrjTimeAccel(100);
         PctHouse hs = new PctHouse(tm, true);
 
-        PctHouseRunnable runner = new PctHouseRunnable(dt, tFinal, tm, hs);
+        PctHouseRunnableAMI runner = new PctHouseRunnableAMI(dt, tFinal, tm, hs, ami);
         Thread t = new Thread(runner);
         t.start();
         
