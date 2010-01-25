@@ -31,7 +31,7 @@
 package house;
 
 import java.io.*;
-
+import gatewayComm.AmiCommSetup;
 import TranRunJLite.TrjTime;
 import TranRunJLite.TrjTimeAccel;
 
@@ -46,6 +46,9 @@ public class PctHouseRunnable implements Runnable
     private double tFinal;
     private TrjTime tm;
     private final PctHouse hs;
+    
+    //setup communications with Gateway
+    
  
  /*   
     File dataFile = new File("PctHouseSim_data.txt");

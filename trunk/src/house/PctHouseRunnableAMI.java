@@ -28,38 +28,70 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package sim;
+package house;
 
+import java.io.*;
+import gatewayComm.AmiCommSetup;
+import TranRunJLite.TrjTime;
 import TranRunJLite.TrjTimeAccel;
-import house.PctHouse;
-import house.PctHouseRunnable;
 
 /**
  *
  * @author William Burke <billstron@gmail.com>
  */
-public class PctHouseSim
+public class PctHouseRunnableAMI implements Runnable
 {
 
-    /** Test function
+    private double dt;
+    private double tFinal;
+    private TrjTime tm;
+    private final PctHouse hs;
+    
+    //setup communications with Gateway
+    private AmiCommSetup ami;
+    private String pow;
+    private String t;
+    private String data;
+    
+    
+    /** Constructor for the implementable house.
      *
-     * @param args
+     * @param dt -- time step
+     * @param tFinal -- final running time
+     * @param tm -- timing structure
+     * @param hs -- the ipctHouse that is made implementable
      */
-    public static void main(String[] args)
+    public PctHouseRunnableAMI(double dt, double tFinal, TrjTime tm, PctHouse hs, AmiCommSetup ami)
     {
-    	//setup network communications with the Gateway
-    	
-        double dt = 5.0;  // Used for samples that need a time delta
-        double tFinal = 24 * 60 * 60;  // sec
-        TrjTimeAccel tm = new TrjTimeAccel(100);
-        PctHouse hs = new PctHouse(tm, true);
-
-        PctHouseRunnable runner = new PctHouseRunnable(dt, tFinal, tm, hs);
-        Thread t = new Thread(runner);
-        t.start();
-        
-        //get whole house energy usage, convert to XML string
-        //send string to Gateway
-        
+        this.dt = dt;
+        this.tFinal = tFinal;
+        this.tm = tm;
+        this.hs = hs;
+        this.ami = ami;
     }
+
+    public void run()
+    {
+    	
+        boolean stop = false;
+        while (tm.getRunningTime() <= tFinal && !stop)
+        {
+            stop = hs.run();
+            
+            pow = Double.toString(hs.getP());
+            t = Double.toString(tm.getRunningTime());
+            data = ami.convertToXML(pow, t);
+            ami.postToGateway(data);
+            System.out.println(data);
+            
+            tm.incrementRunningTime(dt);
+        }
+        
+        System.out.println("Simulation Stopped");
+        ami.postToGateway("STOP");
+        ami.closeAll();
+        
+        System.exit(0);
+    }
+ 
 }
