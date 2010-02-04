@@ -76,7 +76,7 @@ public class EnviroConditionsTask extends TrjTask
         try
         {
             this.ToutModel = new OutsideTempNrelData(
-                    "/data/Cal/weatherData/KSCK_20070228-20071015.CSV");
+                    "./test/KSCK_20070228-20071015.CSV");
         }
         catch (Exception e)
         {

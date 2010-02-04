@@ -139,7 +139,7 @@ public class NeighborhoodTask extends TrjTask implements Envelope
             // Then print the state of each house.
             for (PctHouse hs : houseList)
             {
-                logFile.printf(", ");
+                //logFile.printf(", ");
                 hs.log(logFile);
             }
             // Finally send the return.
