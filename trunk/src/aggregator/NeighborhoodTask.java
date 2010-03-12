@@ -33,7 +33,7 @@ package aggregator;
 import TranRunJLite.TrjSys;
 import TranRunJLite.TrjTask;
 import aggregator.environment.Envelope;
-import house.PctHouse;
+import house.House;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
@@ -44,7 +44,7 @@ import java.util.ArrayList;
 public class NeighborhoodTask extends TrjTask implements Envelope
 {
 
-    private ArrayList<PctHouse> houseList = null;
+    private ArrayList<House> houseList = null;
     private double dtLog = Double.POSITIVE_INFINITY;
     private double tLogNext = 0;
     private double Tout = 90;
@@ -61,7 +61,7 @@ public class NeighborhoodTask extends TrjTask implements Envelope
      * @param houseList
      */
     public NeighborhoodTask(String name, TrjSys sys, double dt,
-            ArrayList<PctHouse> houseList)
+            ArrayList<House> houseList)
     {
         super(name, sys, 0/*Initial State*/, true/*active*/);
         this.dtNominal = dt;
@@ -72,7 +72,7 @@ public class NeighborhoodTask extends TrjTask implements Envelope
     }
 
     public NeighborhoodTask(String name, TrjSys sys, double dt,
-            ArrayList<PctHouse> houseList, double dtLog, PrintWriter logFile)
+            ArrayList<House> houseList, double dtLog, PrintWriter logFile)
     {
         super(name, sys, 0/*Initial State*/, true/*active*/);
         this.dtNominal = dt;
@@ -137,7 +137,7 @@ public class NeighborhoodTask extends TrjTask implements Envelope
             logFile.printf("%6.2f, %6.2f, %6.2f, %6.2f", sys.GetRunningTime(), Tout,
                     solRad, Pagg);
             // Then print the state of each house.
-            for (PctHouse hs : houseList)
+            for (House hs : houseList)
             {
                 //logFile.printf(", ");
                 hs.log(logFile);
@@ -159,7 +159,7 @@ public class NeighborhoodTask extends TrjTask implements Envelope
         boolean stop = false;  // initialize the stop flag
         Pagg = 0;
         // run all of the houses
-        for (PctHouse hs : houseList)
+        for (House hs : houseList)
         {
             // while the stop flag is not on
             if (!stop)

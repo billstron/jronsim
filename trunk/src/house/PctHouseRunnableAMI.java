@@ -45,7 +45,7 @@ public class PctHouseRunnableAMI implements Runnable
     private double dt;
     private double tFinal;
     private TrjTime tm;
-    private final PctHouse hs;
+    private final House hs;
     
     //setup communications with Gateway
     private AmiCommSetup ami;
@@ -61,7 +61,7 @@ public class PctHouseRunnableAMI implements Runnable
      * @param tm -- timing structure
      * @param hs -- the ipctHouse that is made implementable
      */
-    public PctHouseRunnableAMI(double dt, double tFinal, TrjTime tm, PctHouse hs, AmiCommSetup ami)
+    public PctHouseRunnableAMI(double dt, double tFinal, TrjTime tm, House hs, AmiCommSetup ami)
     {
         this.dt = dt;
         this.tFinal = tFinal;

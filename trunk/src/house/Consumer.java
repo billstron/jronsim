@@ -28,38 +28,21 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package house.thermostat;
-
-import java.util.ArrayList;
+package house;
 
 /**
- * @author William Burke <billstron@gmail.com>
+ * An interface that defines that the system is a consumer.
  * 
+ * @author William Burke <billstron@gmail.com>
+ * @date Mar 11, 2010
  */
-public class ThermostatParams {
-	public double DRuserProfile;
-	public double costTolerance;
-	public SetpointTable setpoints;
+public interface Consumer {
 
 	/**
-	 * Construct the ThermostatParams Class.
+	 * Returns the current power consumption
 	 * 
+	 * @return
 	 */
-	public ThermostatParams() {
+	public abstract double getP();
 
-		costTolerance = 5;
-		DRuserProfile = 1;
-		setpoints = new SetpointTable();
-
-		// create a new setpoint day
-		ArrayList<Setpoint> day = new ArrayList<Setpoint>(5);
-		day.add(new Setpoint(75, 6, 0, Setpoint.Label.MORNING));
-		day.add(new Setpoint(79, 9, 0, Setpoint.Label.DAY));
-		day.add(new Setpoint(75, 18, 0, Setpoint.Label.EVENING));
-		day.add(new Setpoint(77, 22, 0, Setpoint.Label.NIGHT));
-
-		for (int i = 0; i < 7; i++) {
-			setpoints.ReplaceSetpointDay(i, day);
-		}
-	}
 }

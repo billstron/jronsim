@@ -38,87 +38,130 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-/** Setpoint table entity.
+/**
+ * Setpoint table entity.
  * 
  * @author William Burke <billstron@gmail.com>
  */
 @SuppressWarnings("unchecked")
 public class SetpointTable {
 
-    private ArrayList<Setpoint>[] table = (ArrayList<Setpoint>[]) new ArrayList[7];
+	private ArrayList<Setpoint>[] table = (ArrayList<Setpoint>[]) new ArrayList[7];
 
-    /** Constructs the setpoint table.
-     * 
-     */
-    public SetpointTable() {
-        double Tsp = 75.0;
-        int hour = 6;
-        int min = 0;
-        Setpoint.Label label = Setpoint.Label.MORNING;
-        //table = new ArrayList[7];
-        for (int day = 0; day < table.length; day++) {
-            table[day] = new ArrayList<Setpoint>();
-            Setpoint sp = new Setpoint(Tsp, hour, min, label);
-            table[day].add(sp);
-            //Tsp += 1;
-        }
-    }
+	/**
+	 * Constructs the setpoint table.
+	 * 
+	 */
+	public SetpointTable() {
+		double Tsp = 75.0;
+		int hour = 6;
+		int min = 0;
+		Setpoint.Label label = Setpoint.Label.MORNING;
+		// table = new ArrayList[7];
+		for (int day = 0; day < table.length; day++) {
+			table[day] = new ArrayList<Setpoint>();
+			Setpoint sp = new Setpoint(Tsp, hour, min, label);
+			table[day].add(sp);
+			// Tsp += 1;
+		}
+	}
 
-    /** Gets the setpoint for the given time.
-     * 
-     * @param cal
-     * @return
-     */
-    public double getTsp(GregorianCalendar cal) {
-        int day = cal.get(Calendar.DAY_OF_WEEK) - 1;
-        int dayPrev = day - 1;
-        if (dayPrev < 0) {
-            dayPrev = 6;
-        }
-        //System.out.println("day, preDay: " + day + ", " + dayPrev);
-        double Tsp = table[dayPrev].get(table[dayPrev].size() - 1).getTsp();
+	/**
+	 * Replace the currently stored day with the one specified.
+	 * 
+	 * @param day
+	 * @param tableDay
+	 */
+	public void ReplaceSetpointDay(int day, ArrayList<Setpoint> tableDay) {
+		// clear the table
+		table[day].clear();
 
-        for (Setpoint sp : table[day]) {
-            if (sp.isBefore(cal)) {
-                //System.out.println("time: " + cal.get(Calendar.HOUR_OF_DAY));
-                Tsp = sp.getTsp();
-            }
-        }
-        return Tsp;
-    }
+		// make sure the entries in the tableDay are sorted properly.
+		boolean sorted = false;
+		while (!sorted) {
+			// assume that it's sorted
+			sorted = true;
+			// move through the entire table looking for unsorted entries
+			for (int i = 1; i < tableDay.size(); i++) {
+				// locally store the times
+				int[] time = tableDay.get(i - 1).getTime();
+				double t0 = (double) time[Setpoint.HOUR]
+						+ (double) time[Setpoint.MINUTE] / 60.0;
+				time = tableDay.get(i).getTime();
+				double t1 = (double) time[Setpoint.HOUR]
+						+ (double) time[Setpoint.MINUTE] / 60.0;
+				// if they are out of order
+				if (t0 > t1) {
+					// move them into better order
+					Setpoint tempSp = tableDay.get(i - 1);
+					tableDay.set(i - 1, tableDay.get(i));
+					tableDay.set(i, tempSp);
+					// indicate that it isn't yet sorted
+					sorted = false;
+				}
+			}
+		}
+		// replace the day
+		table[day] = tableDay;
+	}
 
-    /** Test function.
-     * 
-     * @param args
-     */
-    public static void main(String[] args) {
+	/**
+	 * Gets the setpoint for the given time.
+	 * 
+	 * @param cal
+	 * @return
+	 */
+	public double getTsp(GregorianCalendar cal) {
+		int day = cal.get(Calendar.DAY_OF_WEEK) - 1;
+		int dayPrev = day - 1;
+		if (dayPrev < 0) {
+			dayPrev = 6;
+		}
+		// System.out.println("day, preDay: " + day + ", " + dayPrev);
+		double Tsp = table[dayPrev].get(table[dayPrev].size() - 1).getTsp();
 
-        PrintWriter dataFile0 = null;
-        try {
-            FileWriter fW = new FileWriter("dataFile0.txt");
-            dataFile0 = new PrintWriter(fW);
-        } catch (IOException e) {
-            System.out.println("IO Error " + e);
-            System.exit(1);  // File error -- quit
-        }
-        GregorianCalendar dStart = new GregorianCalendar(1977, 10, 2, 0, 0, 0);
-        TrjTimeSim tm = new TrjTimeSim(dStart, 0);
+		for (Setpoint sp : table[day]) {
+			if (sp.isBefore(cal)) {
+				// System.out.println("time: " + cal.get(Calendar.HOUR_OF_DAY));
+				Tsp = sp.getTsp();
+			}
+		}
+		return Tsp;
+	}
 
-        SetpointTable table = new SetpointTable();
+	/**
+	 * Test function.
+	 * 
+	 * @param args
+	 */
+	public static void main(String[] args) {
 
-        double t = 0;
-        double dt = 60 * 30;
-        double tNext = 0;
-        double tStop = 48 * 3600;
-        while (tm.getRunningTime() < tStop) {
-            t = tm.getRunningTime();
-            if (t >= tNext) {
-                double Tsp = table.getTsp(tm.getCalendar(t));
-                dataFile0.println(t + ", " + Tsp);
-                tNext += dt;
-            }
-            tm.incrementRunningTime(dt);
-        }
-        dataFile0.close();
-    }
+		PrintWriter dataFile0 = null;
+		try {
+			FileWriter fW = new FileWriter("dataFile0.txt");
+			dataFile0 = new PrintWriter(fW);
+		} catch (IOException e) {
+			System.out.println("IO Error " + e);
+			System.exit(1); // File error -- quit
+		}
+		GregorianCalendar dStart = new GregorianCalendar(1977, 10, 2, 0, 0, 0);
+		TrjTimeSim tm = new TrjTimeSim(dStart, 0);
+
+		SetpointTable table = new SetpointTable();
+
+		double t = 0;
+		double dt = 60 * 30;
+		double tNext = 0;
+		double tStop = 48 * 3600;
+		while (tm.getRunningTime() < tStop) {
+			t = tm.getRunningTime();
+			if (t >= tNext) {
+				double Tsp = table.getTsp(tm.getCalendar(t));
+				dataFile0.println(t + ", " + Tsp);
+				tNext += dt;
+			}
+			tm.incrementRunningTime(dt);
+		}
+		dataFile0.close();
+	}
 }

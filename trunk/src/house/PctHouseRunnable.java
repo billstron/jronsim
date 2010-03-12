@@ -45,7 +45,7 @@ public class PctHouseRunnable implements Runnable
     private double dt;
     private double tFinal;
     private TrjTime tm;
-    private final PctHouse hs;
+    private final House hs;
     
     //setup communications with Gateway
     
@@ -63,7 +63,7 @@ public class PctHouseRunnable implements Runnable
      * @param tm -- timing structure
      * @param hs -- the ipctHouse that is made implementable
      */
-    public PctHouseRunnable(double dt, double tFinal, TrjTime tm, PctHouse hs)
+    public PctHouseRunnable(double dt, double tFinal, TrjTime tm, House hs)
     {
         this.dt = dt;
         this.tFinal = tFinal;
@@ -106,7 +106,7 @@ public class PctHouseRunnable implements Runnable
         double dt = 5.0;  // Used for samples that need a time delta
         double tFinal = 24 * 60 * 60;  // sec
         TrjTimeAccel tm = new TrjTimeAccel(300);
-        PctHouse hs = new PctHouse(tm, true);
+        House hs = new PctHouse(tm, true);
 
         PctHouseRunnable runner = new PctHouseRunnable(dt, tFinal, tm, hs);
         Thread t = new Thread(runner);

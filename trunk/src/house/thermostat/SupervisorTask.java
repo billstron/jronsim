@@ -32,138 +32,158 @@ package house.thermostat;
 
 import TranRunJLite.*;
 
-/**The Supervisor Task stores and returns setpoint information.
- *
+/**
+ * The Supervisor Task stores and returns setpoint information.
+ * 
  * @author William Burke <billstron@gmail.com>
  */
 public class SupervisorTask extends TrjTask {
 
-    private int mode;
-    private SetpointTable table;
-    private double Tsp;
-    private double TspTable;
-    private boolean newSp;
-    /** State identifiers
-     */
-    private final int sHold = 0;
-    private final int sTables = 1;
-    /** Public mode identifiers.
-     */
-    public final int HOLD_MODE = 0;
-    public final int TABLES_MODE = 1;
+	private int mode;
+	private SetpointTable table;
+	private double Tsp;
+	private double TspTable;
+	private boolean newSp;
+	/**
+	 * State identifiers
+	 */
+	private final int sHold = 0;
+	private final int sTables = 1;
+	/**
+	 * Public mode identifiers.
+	 */
+	public final int HOLD_MODE = 0;
+	public final int TABLES_MODE = 1;
 
-    /** Constructs the supervisor task.
-     * 
-     * @param name
-     * @param sys
-     * @param dt
-     */
-    public SupervisorTask(String name, TrjSys sys,
-            double dt) {
-        super(name, sys, 0 /*Initial State*/, true /*Start Active*/);
+	/**
+	 * Constructs the supervisor task.
+	 * 
+	 * @param name
+	 * @param sys
+	 * @param dt
+	 */
+	public SupervisorTask(String name, TrjSys sys, double dt) {
+		super(name, sys, 0 /* Initial State */, true /* Start Active */);
 
-        stateNames.add("Hold State");
-        stateNames.add("Tables State");
-        this.dtNominal = dt;
-        this.table = new SetpointTable();
-        this.TspTable = table.getTsp(sys.GetCalendar());
-        this.Tsp = this.TspTable;
-        this.newSp = true;
-        this.mode = TABLES_MODE;
-    }
+		stateNames.add("Hold State");
+		stateNames.add("Tables State");
+		this.dtNominal = dt;
+		this.table = new SetpointTable();
+		this.TspTable = table.getTsp(sys.GetCalendar());
+		this.Tsp = this.TspTable;
+		this.newSp = true;
+		this.mode = TABLES_MODE;
+	}
 
-    /** Indicates if the current setpoint is new.
-     * 
-     * @return
-     */
-    public boolean isNewSetpoint() {
-        return this.newSp;
-    }
+	/**
+	 * Set the setpoint table
+	 * 
+	 * @param table
+	 */
+	void setSetpointTable(SetpointTable table) {
+		this.table = table;
+	}
 
-    /** Returns the current setpoint.  If the setpoint is new, the flag is reset
-     * as well.
-     * 
-     * @return
-     */
-    public double getSetpoint() {
-        this.newSp = false;
-        return this.Tsp;
-    }
+	/**
+	 * Indicates if the current setpoint is new.
+	 * 
+	 * @return
+	 */
+	public boolean isNewSetpoint() {
+		return this.newSp;
+	}
 
-    /** Tells if the hold state is currently active.
-     * 
-     * @return
-     */
-    public boolean isHoldOn() {
-        boolean flag = false;
-        if (mode == HOLD_MODE) {
-            flag = true;
-        }
-        return flag;
-    }
+	/**
+	 * Returns the current setpoint. If the setpoint is new, the flag is reset
+	 * as well.
+	 * 
+	 * @return
+	 */
+	public double getSetpoint() {
+		this.newSp = false;
+		return this.Tsp;
+	}
 
-    /** Sets the Supervisor into the hold state.
-     * 
-     * @param holdOn
-     */
-    public void setHoldOn(boolean holdOn) {
-        if (holdOn) {
-            mode = HOLD_MODE;
-        } else {
-            mode = TABLES_MODE;
-        }
-    }
+	/**
+	 * Tells if the hold state is currently active.
+	 * 
+	 * @return
+	 */
+	public boolean isHoldOn() {
+		boolean flag = false;
+		if (mode == HOLD_MODE) {
+			flag = true;
+		}
+		return flag;
+	}
 
-    /** Check to see if this task is ready to run
-     * @param sys The system in which this task is embedded
-     * @return "true" if this task is ready to run
-     */
-    public boolean RunTaskNow(TrjSys sys) {
-        return CheckTime(sys.GetRunningTime());
-    }
+	/**
+	 * Sets the Supervisor into the hold state.
+	 * 
+	 * @param holdOn
+	 */
+	public void setHoldOn(boolean holdOn) {
+		if (holdOn) {
+			mode = HOLD_MODE;
+		} else {
+			mode = TABLES_MODE;
+		}
+	}
 
-    /** Runs the Supervisor task.
-     * 
-     * @param sys
-     * @return
-     */
-    @Override
-    public boolean RunTask(TrjSys sys) {
+	/**
+	 * Check to see if this task is ready to run
+	 * 
+	 * @param sys
+	 *            The system in which this task is embedded
+	 * @return "true" if this task is ready to run
+	 */
+	public boolean RunTaskNow(TrjSys sys) {
+		return CheckTime(sys.GetRunningTime());
+	}
 
-        switch (this.currentState) {
-            case sHold:  // no setpoint changes.
-                // Upon entry, don't indicate a new setpoint
-                if (this.runEntry) {
-                    //System.out.println("SupervisorState: sHold");
-                    //newSp = false;
-                    }
-                // Determine the state transition based on the mode variable
-                this.nextState = -1;
-                if (mode != HOLD_MODE) {
-                    this.nextState = sTables;
-                }
-                break;
-            case sTables:  // changes based on the setpoint tables
-                // Upon entry, always indicate a new setpoint
-                if (this.runEntry) {
-                    //System.out.println("SupervisorState: sTables");
-                    //newSp = true;
-                    }
-                // Get the new setpoint and compare it to the old one.
-                // if the setpoint changed, indicate as such.
-                TspTable = table.getTsp(sys.GetCalendar());
-                if (Tsp != TspTable) {
-                    newSp = true;
-                    Tsp = TspTable;
-                }
-                // determine the state transtion based on the mode flag and
-                // the override flag
-                this.nextState = -1;
-                if (mode != TABLES_MODE) {
-                    this.nextState = sHold;
-                }
-                break;
-        } // case
-        return false;
-    }
+	/**
+	 * Runs the Supervisor task.
+	 * 
+	 * @param sys
+	 * @return
+	 */
+	@Override
+	public boolean RunTask(TrjSys sys) {
+
+		switch (this.currentState) {
+		case sHold: // no setpoint changes.
+			// Upon entry, don't indicate a new setpoint
+			if (this.runEntry) {
+				// System.out.println("SupervisorState: sHold");
+				// newSp = false;
+			}
+			// Determine the state transition based on the mode variable
+			this.nextState = -1;
+			if (mode != HOLD_MODE) {
+				this.nextState = sTables;
+			}
+			break;
+		case sTables: // changes based on the setpoint tables
+			// Upon entry, always indicate a new setpoint
+			if (this.runEntry) {
+				// System.out.println("SupervisorState: sTables");
+				// newSp = true;
+			}
+			// Get the new setpoint and compare it to the old one.
+			// if the setpoint changed, indicate as such.
+			TspTable = table.getTsp(sys.GetCalendar());
+			if (Tsp != TspTable) {
+				newSp = true;
+				Tsp = TspTable;
+			}
+			// determine the state transtion based on the mode flag and
+			// the override flag
+			this.nextState = -1;
+			if (mode != TABLES_MODE) {
+				this.nextState = sHold;
+			}
+			break;
+		} // case
+		return false;
+	}
 }

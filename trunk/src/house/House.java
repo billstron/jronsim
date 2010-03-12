@@ -28,38 +28,51 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package house.thermostat;
+package house;
 
-import java.util.ArrayList;
+import java.io.PrintWriter;
 
 /**
- * @author William Burke <billstron@gmail.com>
+ * A public interface that all houses that will run under the NeighborhoodTask
+ * will implement.
  * 
+ * @author William Burke <billstron@gmail.com>
+ * @date Mar 11, 2010
  */
-public class ThermostatParams {
-	public double DRuserProfile;
-	public double costTolerance;
-	public SetpointTable setpoints;
+public interface House {
 
 	/**
-	 * Construct the ThermostatParams Class.
+	 * runs the house system states and simulation.
+	 * 
+	 * @return indicates the need to stop the program (true, false)
+	 */
+	public abstract boolean run();
+
+	/**
+	 * Log function for the house system.
 	 * 
 	 */
-	public ThermostatParams() {
+	public abstract void log(PrintWriter logFile);
 
-		costTolerance = 5;
-		DRuserProfile = 1;
-		setpoints = new SetpointTable();
+	/**
+	 * Set the solar radiation experienced by the house.
+	 * 
+	 * @param rad
+	 */
+	public abstract void setSolarRadiation(double rad);
 
-		// create a new setpoint day
-		ArrayList<Setpoint> day = new ArrayList<Setpoint>(5);
-		day.add(new Setpoint(75, 6, 0, Setpoint.Label.MORNING));
-		day.add(new Setpoint(79, 9, 0, Setpoint.Label.DAY));
-		day.add(new Setpoint(75, 18, 0, Setpoint.Label.EVENING));
-		day.add(new Setpoint(77, 22, 0, Setpoint.Label.NIGHT));
+	/**
+	 * Set the outside temperature experienced by the house.
+	 * 
+	 * @param Tout
+	 */
+	public abstract void setOutsideTemp(double Tout);
 
-		for (int i = 0; i < 7; i++) {
-			setpoints.ReplaceSetpointDay(i, day);
-		}
-	}
+	/**
+	 * Return the outside temperature.
+	 * 
+	 * @return
+	 */
+	public abstract double getP();
+
 }

@@ -31,6 +31,7 @@ package house;
 
 import TranRunJLite.*;
 import aggregator.environment.Envelope;
+import house.autoAppliances.AutoAppliancesSys;
 import house.simulation.*;
 import java.io.PrintWriter;
 import house.thermostat.*;
@@ -41,68 +42,17 @@ import java.util.ArrayList;
  * 
  * @author William Burke <billstron@gmail.com>
  */
-public class PctHouse implements Envelope, House {
+public class WholeHouse implements Envelope, House {
 
 	private String name;
 	private int idNum;
 	private TrjTime tm;
 	private ArrayList<TrjSys> sysList = new ArrayList<TrjSys>();
-	private final int TSTAT_I = 0;
-	private final int THERM_I = 1;
-
-	/**
-	 * The constructor for a house object.
-	 * 
-	 * @param tm
-	 * @param gui
-	 */
-	public PctHouse(TrjTime tm, Boolean gui) {
-		// Create the thermal system with the default parameters
-		ThermalSys therm = new ThermalSys("Default House", tm);
-		// Create the thermostat system
-		ThermostatSys tstat = new ThermostatSys("Basic Thermostat", tm, therm,
-				gui);
-
-		// Initialize the house
-		PctHouseInit("Basic House", tm, 0, therm, tstat);
-	}
-
-	/**
-	 * Construct the Pct House
-	 * 
-	 * @param name
-	 * @param tm
-	 */
-	public PctHouse(String name, TrjTime tm) {
-		// Create the thermal system with the default parameters
-		ThermalSys therm = new ThermalSys("Default House", tm);
-		// Create the thermostat system
-		Boolean gui = false;
-		ThermostatSys tstat = new ThermostatSys("Basic Thermostat", tm, therm,
-				gui);
-
-		// Initialize the house
-		PctHouseInit(name, tm, 0, therm, tstat);
-	}
-
-	/**
-	 * Construct the PCT house
-	 * 
-	 * @param name
-	 * @param tm
-	 * @param idNum
-	 */
-	public PctHouse(String name, TrjTime tm, int idNum) {
-		// Create the thermal system with the default parameters
-		ThermalSys therm = new ThermalSys("Default House", tm);
-		// Create the thermostat system
-		Boolean gui = false;
-		ThermostatSys tstat = new ThermostatSys("Basic Thermostat", tm, therm,
-				gui);
-
-		// Initialize the house
-		PctHouseInit(name, tm, idNum, therm, tstat);
-	}
+	private ArrayList<Consumer> consumList = new ArrayList<Consumer>();
+	private final static int TSTAT_I = 0;
+	private final static int THERM_I = 1;
+	private final static int APPLI_I = 2;
+	private double Pdemand = 0;
 
 	/**
 	 * Construct a Pct House using specified thermal parameters
@@ -112,20 +62,24 @@ public class PctHouse implements Envelope, House {
 	 * @param idNum
 	 * @param params
 	 */
-	public PctHouse(String name, TrjTime tm, int idNum, ThermalParams params,
-			ThermostatParams tstParams) {
+	public WholeHouse(String name, TrjTime tm, int idNum,
+			ThermalParams thermPar, ThermostatParams tstatPar) {
 		// Create the thermal system with the default parameters
-		ThermalSys therm = new ThermalSys("Specific House", tm, params);
+		ThermalSys therm = new ThermalSys("Specific House", tm, thermPar);
 		// Create the thermostat system
+		Boolean gui = false;
 		ThermostatSys tstat = new ThermostatSys("Basic Thermostat", tm, therm,
-				tstParams);
+				tstatPar);
+
+		AutoAppliancesSys appliances = new AutoAppliancesSys(
+				"Automatic Appliances", tm);
 
 		// Initialize the house
-		PctHouseInit(name, tm, idNum, therm, tstat);
+		PctHouseInit(name, tm, idNum, therm, tstat, appliances);
 	}
 
 	/**
-	 * Initialize the Pch House variables
+	 * Initialize the Pct House variables
 	 * 
 	 * @param name
 	 * @param tm
@@ -134,7 +88,7 @@ public class PctHouse implements Envelope, House {
 	 * @param tstat
 	 */
 	private void PctHouseInit(String name, TrjTime tm, int idNum,
-			ThermalSys therm, ThermostatSys tstat) {
+			ThermalSys therm, ThermostatSys tstat, AutoAppliancesSys appliances) {
 		// Initialize the simulation
 		this.name = name;
 		this.tm = tm;
@@ -142,10 +96,16 @@ public class PctHouse implements Envelope, House {
 
 		sysList.add(tstat); // this one is index 0
 		sysList.add(therm); // this one is index 1
+		sysList.add(appliances);
+
+		consumList.add(therm);
+		consumList.add(appliances);
 	}
 
-	/* (non-Javadoc)
-	 * @see house.House1#run()
+	/**
+	 * runs the house system states and simulation.
+	 * 
+	 * @return indicates the need to stop the program (true, false)
 	 */
 	public boolean run() {
 		// System.out.println("here0");
@@ -161,15 +121,17 @@ public class PctHouse implements Envelope, House {
 		return stop;
 	}
 
-	/* (non-Javadoc)
-	 * @see house.House1#log(java.io.PrintWriter)
+	/**
+	 * Log function for the house system.
+	 * 
 	 */
 	public void log(PrintWriter logFile) {
 		ThermalSys therm = (ThermalSys) sysList.get(THERM_I);
+		ThermostatSys tstat = (ThermostatSys) sysList.get(TSTAT_I);
 		if (logFile != null) {
-			logFile.printf("%d\t %.2f\t %.2f\t %.6f\t %.2f\n", idNum, tm
+			logFile.printf("%d\t %.2f\t %.2f\t %.6f\t %.2f\t %.2f\t", idNum, tm
 					.getRunningTime(), therm.getOutsideTemp(), therm
-					.getTempInside(), therm.getP());
+					.getTempInside(), tstat.getSetpointTemp(), this.getP());
 		}
 	}
 
@@ -191,50 +153,37 @@ public class PctHouse implements Envelope, House {
 		return idNum;
 	}
 
-	/* (non-Javadoc)
-	 * @see house.House1#setSolarRadiation(double)
+	/**
+	 * Set the solar radiation experienced by the house.
+	 * 
+	 * @param rad
 	 */
 	public void setSolarRadiation(double rad) {
 		ThermalSys therm = (ThermalSys) sysList.get(THERM_I);
 		therm.setSolarRadiation(rad);
 	}
 
-	/* (non-Javadoc)
-	 * @see house.House1#setOutsideTemp(double)
+	/**
+	 * Set the outside temperature experienced by the house.
+	 * 
+	 * @param Tout
 	 */
 	public void setOutsideTemp(double Tout) {
 		ThermalSys therm = (ThermalSys) sysList.get(THERM_I);
 		therm.setOutsideTemp(Tout);
 	}
 
-	/* (non-Javadoc)
-	 * @see house.House1#getP()
+	/**
+	 * Return the total energy
+	 * 
+	 * @return
 	 */
 	public double getP() {
-		ThermalSys therm = (ThermalSys) sysList.get(THERM_I);
-		return therm.getP();
-	}
-
-	public static void main(String[] args) {
-		double dt = 5.0; // Used for samples that need a time delta
-		double dtLog = 60;
-		double tFinal = 1 * 60 * 60; // sec
-		double tLogNext = 0;
-		TrjTimeAccel tm = new TrjTimeAccel(300);
-
-		House hs = new PctHouse(tm, false);
-
-		boolean stop = false;
-		while (tm.getRunningTime() <= tFinal && !stop) {
-			stop = hs.run();
-			if (tm.getRunningTime() >= tLogNext) {
-				hs.log(null);
-				// System.out.println("here");
-				tLogNext += dtLog;
-			}
-			tm.incrementRunningTime(dt);
+		Pdemand = 0;
+		for (Consumer cc : consumList) {
+			Pdemand += cc.getP();
 		}
-		System.out.println("Simulation Stopped");
-		System.exit(0);
+
+		return Pdemand;
 	}
 }

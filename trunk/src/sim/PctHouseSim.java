@@ -31,6 +31,7 @@
 package sim;
 
 import TranRunJLite.TrjTimeAccel;
+import house.House;
 import house.PctHouse;
 import house.PctHouseRunnable;
 
@@ -51,8 +52,8 @@ public class PctHouseSim
     	
         double dt = 5.0;  // Used for samples that need a time delta
         double tFinal = 24 * 60 * 60;  // sec
-        TrjTimeAccel tm = new TrjTimeAccel(100);
-        PctHouse hs = new PctHouse(tm, true);
+        TrjTimeAccel tm = new TrjTimeAccel(1000);
+        House hs = new PctHouse(tm, true);
 
         PctHouseRunnable runner = new PctHouseRunnable(dt, tFinal, tm, hs);
         Thread t = new Thread(runner);

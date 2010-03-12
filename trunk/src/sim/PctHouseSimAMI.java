@@ -31,6 +31,7 @@
 package sim;
 
 import TranRunJLite.TrjTimeAccel;
+import house.House;
 import house.PctHouse;
 import house.PctHouseRunnableAMI;
 import gatewayComm.AmiCommSetup;
@@ -54,7 +55,7 @@ public class PctHouseSimAMI
         double dt = 5.0;  // Used for samples that need a time delta
         double tFinal = 24 * 60 * 60;  // sec
         TrjTimeAccel tm = new TrjTimeAccel(100);
-        PctHouse hs = new PctHouse(tm, true);
+        House hs = new PctHouse(tm, true);
 
         PctHouseRunnableAMI runner = new PctHouseRunnableAMI(dt, tFinal, tm, hs, ami);
         Thread t = new Thread(runner);
