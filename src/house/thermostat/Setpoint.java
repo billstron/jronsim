@@ -42,14 +42,11 @@ public class Setpoint {
     private double Tsp;
     private int[] tm = new int[3];
     private Label label;
-
-    /** Enumeration constants for the timeing variables.
-     *
-     */
-    private enum Time {
-
-        HOUR, MINUTE, SECOND
-    }
+    
+    // enumeration for the time
+    public static final int HOUR = 0;
+    public static final int MINUTE = 1;
+    public static final int SECOND = 2;
 
     /** Labels for the Setpoint table entries
      *
@@ -88,9 +85,9 @@ public class Setpoint {
      * @param label -- Label for this entry
      */
     Setpoint(double Tsp, int hour, int min, Label label) {
-        this.tm[Time.HOUR.ordinal()] = hour;
-        this.tm[Time.MINUTE.ordinal()] = min;
-        this.tm[Time.SECOND.ordinal()] = 0;
+        this.tm[HOUR] = hour;
+        this.tm[MINUTE] = min;
+        this.tm[SECOND] = 0;
 
         this.Tsp = Tsp;
         this.label = label;
@@ -111,6 +108,10 @@ public class Setpoint {
     Label getLabel() {
         return label;
     }
+    
+    int[] getTime(){
+    	return tm;
+    }
 
     /** Tells wether or not the calender time is before this setpoint entry.
      *
@@ -119,13 +120,13 @@ public class Setpoint {
      */
     boolean isBefore(Calendar cal) {
         boolean isBefore = false;
-        if (tm[Time.HOUR.ordinal()] < cal.get(Calendar.HOUR_OF_DAY)) {
+        if (tm[HOUR] < cal.get(Calendar.HOUR_OF_DAY)) {
             isBefore = true;
-        } else if (tm[Time.HOUR.ordinal()] == cal.get(Calendar.HOUR_OF_DAY)) {
-            if (tm[Time.MINUTE.ordinal()] <= cal.get(Calendar.MINUTE)) {
+        } else if (tm[HOUR] == cal.get(Calendar.HOUR_OF_DAY)) {
+            if (tm[MINUTE] <= cal.get(Calendar.MINUTE)) {
                 isBefore = true;
-            } else if (tm[Time.MINUTE.ordinal()] == cal.get(Calendar.MINUTE)) {
-                if (tm[Time.SECOND.ordinal()] <= cal.get(Calendar.SECOND)) {
+            } else if (tm[MINUTE] == cal.get(Calendar.MINUTE)) {
+                if (tm[SECOND] <= cal.get(Calendar.SECOND)) {
                     isBefore = true;
                 } else {
                     isBefore = false;

@@ -32,9 +32,12 @@ package sim;
 
 import TranRunJLite.*;
 import aggregator.SystemicSys;
+import house.House;
 import house.PctHouse;
+import house.WholeHouse;
 import house.simulation.ThermalParams;
 import house.simulation.ThermalParamsRand;
+import house.thermostat.ThermostatParams;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -56,7 +59,7 @@ public class SystSim {
 	public static final int HOODLOG_I = 0;
 	public static final int MEASURELOG_I = 1;
 	public static final int CONTROLLOG_I = 2;
-	static String inputFiles[] = { "./test/ThermalParam.in"};
+	static String inputFiles[] = { "./test/ThermalParam.in" };
 	public static final int THERMALPARAMS = 0;
 
 	public static void main(String[] args) throws Exception {
@@ -81,12 +84,16 @@ public class SystSim {
 		}
 
 		// Create the list of houses.
-		ArrayList<PctHouse> houseList = new ArrayList<PctHouse>();
+		ArrayList<House> houseList = new ArrayList<House>();
 		for (int i = 0; i < 5; i++) {
 			// generate a new set of random house parameters
-			ThermalParams params = new ThermalParamsRand(rn, inputFiles[THERMALPARAMS]);
+			ThermalParams thermParams = new ThermalParamsRand(rn,
+					inputFiles[THERMALPARAMS]);
+			// generate a set of thermostat params
+			ThermostatParams tstatParams = new ThermostatParams();
 			// generate a new house
-			PctHouse hs = new PctHouse("House", tm, i, params);
+			WholeHouse hs = new WholeHouse("House", tm, i, thermParams,
+					tstatParams);
 			houseList.add(hs);
 		}
 

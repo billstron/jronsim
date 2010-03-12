@@ -34,7 +34,7 @@ import TranRunJLite.TrjSys;
 import TranRunJLite.TrjTime;
 import aggregator.environment.Envelope;
 import aggregator.environment.EnviroConditionsTask;
-import house.PctHouse;
+import house.House;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
@@ -51,7 +51,7 @@ public class SystemicSys extends TrjSys
     private EnviroConditionsTask enviro;
     private String name;
 
-    public SystemicSys(String name, TrjTime tm, ArrayList<PctHouse> houseList)
+    public SystemicSys(String name, TrjTime tm, ArrayList<House> houseList)
     {
         super(tm);
         this.name = name;
@@ -79,7 +79,7 @@ public class SystemicSys extends TrjSys
                 face);
     }
 
-    public SystemicSys(String name, TrjTime tm, ArrayList<PctHouse> houseList,
+    public SystemicSys(String name, TrjTime tm, ArrayList<House> houseList,
             double dtLog, PrintWriter hoodLog, PrintWriter ControlLog,
             PrintWriter MeasureLog)
     {

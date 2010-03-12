@@ -36,139 +36,126 @@ import TranRunJLite.*;
 import javax.swing.SwingUtilities;
 import house.userInterface.UserInterfaceJFrame;
 
-/** The TrjSys that implements a thermostat.
+/**
+ * The TrjSys that implements a thermostat.
  * 
  * @author William Burke <billstron@gmail.com>
  */
 public class ThermostatSys extends TrjSys {
 
-    String name;
-    private final HvacHystControlTask heaterHystCont;
-    private final HvacHystControlTask coolerHystCont;
-    private final HvacPIDControlTask heaterPidCont;
-    private final HvacPIDControlTask coolerPidCont;
-    private final TinFilterTask TinFilt;
-    private final HvacPwmTask heaterPwm;
-    private final HvacPwmTask coolerPwm;
-    private final CoordinatorTask coordinator;
-    private final SupervisorTask supervisor;
-    private final UserInterfaceTask userInterface;
-    private final ComTask com;
-    private final GoalSeekerTask goalSeeker;
+	String name;
+	private HvacHystControlTask heaterHystCont;
+	private HvacHystControlTask coolerHystCont;
+	private HvacPIDControlTask heaterPidCont;
+	private HvacPIDControlTask coolerPidCont;
+	private TinFilterTask TinFilt;
+	private HvacPwmTask heaterPwm;
+	private HvacPwmTask coolerPwm;
+	private CoordinatorTask coordinator;
+	private SupervisorTask supervisor;
+	private UserInterfaceTask userInterface;
+	private ComTask com;
+	private GoalSeekerTask goalSeeker;
 
-    /** Construct the Thermostat System.
-     * 
-     * @param name
-     * @param tm
-     * @param therm -- Where to send the input/output data.  
-     */
-    public ThermostatSys(String name, TrjTime tm, HouseIO therm) {
-        super(tm);
+	/**
+	 * Construct the Thermostat System.
+	 * 
+	 * @param name
+	 * @param tm
+	 * @param therm
+	 *            -- Where to send the input/output data.
+	 */
+	public ThermostatSys(String name, TrjTime tm, HouseIO therm) {
+		super(tm);
 
-        this.name = name;
+		initThermostatSys(name, tm, therm, null);
+	}
 
-        double dtBox = 15 * 60;
-        double dtFilter = 1;
-        TinFilt = new TinFilterTask("Inside Temp Filter", this, therm, dtBox,
-                dtFilter);
+	public ThermostatSys(String name, TrjTime tm, HouseIO therm,
+			ThermostatParams params) {
+		super(tm);
 
-        double dtPeriod = 15 * 60;
-        double dtPwm = 1;
-        heaterPwm = new HvacPwmTask("Heater PWM", this, dtPeriod, true,
-                dtPwm, false/*trigger mode*/, therm);
-        coolerPwm = new HvacPwmTask("Cooler PWM", this, dtPeriod, false,
-                dtPwm, false/*trigger mode*/, therm);
+		initThermostatSys(name, tm, therm, params);
+	}
 
-        double dtPid = 15 * 60;
-        double kp = 1;
-        double ki = 1;
-        double kd = 0;
-        heaterPidCont = new HvacPIDControlTask("Heater PID Controller", this,
-                true, kp, ki, kd, heaterPwm, TinFilt, dtPid);
-        coolerPidCont = new HvacPIDControlTask("Cooler PID Controller", this,
-                false, kp, ki, kd, coolerPwm, TinFilt, dtPid);
+	/**
+	 * Construct the Thermostat System with a GUI.
+	 * 
+	 * @param name
+	 * @param tm
+	 * @param therm
+	 *            -- where to send the input/output data.
+	 * @param uiFlag
+	 *            -- create a gui?
+	 */
+	public ThermostatSys(String name, TrjTime tm, HouseIO therm, boolean uiFlag) {
+		super(tm);
 
-        heaterHystCont = new HvacHystControlTask("Heater Control Task", this,
-                true, therm, 5.0);
-        coolerHystCont = new HvacHystControlTask("Cooler Control Task", this,
-                false, therm, 5.0);
+		initThermostatSys(name, tm, therm, null);
 
-        coordinator = new CoordinatorTask("Coordinator Task",
-                this, heaterHystCont, coolerHystCont,
-                heaterPidCont, coolerPidCont, 5.0);
-        coordinator.setMode(ThermostatMode.COOLING);
-        coordinator.SetCommand(coordinator.START_HYST_CONTROL);
+		if (uiFlag) {
+			UserInterfaceJFrame gui = new UserInterfaceJFrame(userInterface);
+			SwingUtilities.invokeLater(gui);
+		}
+	}
 
-        supervisor = new SupervisorTask("Supervisor Task", this,
-                5.0);
+	private void initThermostatSys(String name, TrjTime tm, HouseIO therm,
+			ThermostatParams params) {
 
-        userInterface = new UserInterfaceTask("User Interface Task", this,
-                0.5);
+		this.name = name;
 
-        com = new ComTask("Communications Task", this, 1.0);
+		double dtBox = 15 * 60;
+		double dtFilter = 1;
+		TinFilt = new TinFilterTask("Inside Temp Filter", this, therm, dtBox,
+				dtFilter);
 
-        goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
-                supervisor, coordinator, userInterface, com, 5.0);
-    }
+		double dtPeriod = 15 * 60;
+		double dtPwm = 1;
+		heaterPwm = new HvacPwmTask("Heater PWM", this, dtPeriod, true, dtPwm,
+				false/* trigger mode */, therm);
+		coolerPwm = new HvacPwmTask("Cooler PWM", this, dtPeriod, false, dtPwm,
+				false/* trigger mode */, therm);
 
-    /** Construct the Thermostat System with a GUI.
-     *
-     * @param name
-     * @param tm
-     * @param therm -- where to send the input/output data.
-     * @param uiFlag -- create a gui?
-     */
-    public ThermostatSys(String name, TrjTime tm, HouseIO therm, boolean uiFlag) {
-        super(tm);
+		double dtPid = 15 * 60;
+		double kp = 1;
+		double ki = 1;
+		double kd = 0;
+		heaterPidCont = new HvacPIDControlTask("Heater PID Controller", this,
+				true, kp, ki, kd, heaterPwm, TinFilt, dtPid);
+		coolerPidCont = new HvacPIDControlTask("Cooler PID Controller", this,
+				false, kp, ki, kd, coolerPwm, TinFilt, dtPid);
 
-        this.name = name;
+		heaterHystCont = new HvacHystControlTask("Heater Control Task", this,
+				true, therm, 5.0);
+		coolerHystCont = new HvacHystControlTask("Cooler Control Task", this,
+				false, therm, 5.0);
 
-        double dtBox = 15 * 60;
-        double dtFilter = 1;
-        TinFilt = new TinFilterTask("Inside Temp Filter", this, therm, dtBox,
-                dtFilter);
+		coordinator = new CoordinatorTask("Coordinator Task", this,
+				heaterHystCont, coolerHystCont, heaterPidCont, coolerPidCont,
+				5.0);
+		coordinator.setMode(ThermostatMode.COOLING);
+		coordinator.SetCommand(coordinator.START_HYST_CONTROL);
 
-        double dtPeriod = 15 * 60;
-        double dtPwm = 1;
-        heaterPwm = new HvacPwmTask("Heater PWM", this, dtPeriod, true,
-                dtPwm, false/*trigger mode*/, therm);
-        coolerPwm = new HvacPwmTask("Cooler PWM", this, dtPeriod, false,
-                dtPwm, false/*trigger mode*/, therm);
+		supervisor = new SupervisorTask("Supervisor Task", this, 5.0);
+		if (params != null)
+			supervisor.setSetpointTable(params.setpoints);
 
-        double dtPid = 15 * 60;
-        double kp = 1;
-        double ki = 1;
-        double kd = 0;
-        heaterPidCont = new HvacPIDControlTask("Heater PID Controller", this,
-                true, kp, ki, kd, heaterPwm, TinFilt, dtPid);
-        coolerPidCont = new HvacPIDControlTask("Cooler PID Controller", this,
-                false, kp, ki, kd, coolerPwm, TinFilt, dtPid);
+		userInterface = new UserInterfaceTask("User Interface Task", this, 0.5);
 
-        heaterHystCont = new HvacHystControlTask("Heater Control Task", this,
-                true, therm, 5.0);
-        coolerHystCont = new HvacHystControlTask("Cooler Control Task", this,
-                false, therm, 5.0);
+		com = new ComTask("Communications Task", this, 1.0);
 
-        coordinator = new CoordinatorTask("Coordinator Task",
-                this, heaterHystCont, coolerHystCont,
-                heaterPidCont, coolerPidCont, 5.0);
-        coordinator.setMode(ThermostatMode.COOLING);
-        coordinator.SetCommand(coordinator.START_HYST_CONTROL);
+		goalSeeker = new GoalSeekerTask("Goal Seeker Task", this, supervisor,
+				coordinator, userInterface, com, 5.0);
+		if (params != null)
+			goalSeeker.setCostTolerance(params.costTolerance);
+	}
 
-        supervisor = new SupervisorTask("Supervisor Task", this,
-                5.0);
-
-        userInterface = new UserInterfaceTask("User Interface Task", this,
-                0.5);
-
-        com = new ComTask("Communications Task", this, 1.0);
-
-        goalSeeker = new GoalSeekerTask("Goal Seeker Task", this,
-                supervisor, coordinator, userInterface, com, 5.0);
-
-        if (uiFlag) {
-            UserInterfaceJFrame gui = new UserInterfaceJFrame(userInterface);
-            SwingUtilities.invokeLater(gui);
-        }
-    }
+	/**
+	 * Return the current setpoint temp
+	 * 
+	 * @return
+	 */
+	public double getSetpointTemp() {
+		return goalSeeker.getSetpointTemp();
+	}
 }
