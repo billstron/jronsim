@@ -31,7 +31,7 @@ package house;
 
 import TranRunJLite.*;
 import aggregator.environment.Envelope;
-import house.autoAppliances.AutoAppliancesSys;
+import house.appliances.AutoAppliancesSys;
 import house.simulation.*;
 import java.io.PrintWriter;
 import house.thermostat.*;
