@@ -38,6 +38,7 @@ import house.WholeHouse;
 import house.simulation.ThermalParams;
 import house.simulation.ThermalParamsRand;
 import house.thermostat.ThermostatParams;
+import house.thermostat.ThermostatParamsRand;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -64,14 +65,14 @@ public class SystSim {
 
 	public static void main(String[] args) throws Exception {
 		double dt = 5.0; // Used for samples that need a time delta
-		double tFinal = 24 * 60 * 60; // sec
+		double tFinal = 48 * 60 * 60; // sec
 
 		// initialize the random number generator
 		int seed = 35621;
 		BoundedRand rn = new BoundedRand(seed);
 
 		// Create the calendar and timer
-		GregorianCalendar cal = new GregorianCalendar(2007, 6, 28, 0, 0);
+		GregorianCalendar cal = new GregorianCalendar(2007, 7, 3, 0, 0);
 		TrjTimeSim tm = new TrjTimeSim(cal, 0.0); // Create the log files
 		try {
 			for (int i = 0; i < logNames.length; i++) {
@@ -85,15 +86,16 @@ public class SystSim {
 
 		// Create the list of houses.
 		ArrayList<House> houseList = new ArrayList<House>();
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 10; i++) {
 			// generate a new set of random house parameters
 			ThermalParams thermParams = new ThermalParamsRand(rn,
 					inputFiles[THERMALPARAMS]);
+
 			// generate a set of thermostat params
-			ThermostatParams tstatParams = new ThermostatParams();
+			ThermostatParams tstatParams = new ThermostatParamsRand(rn);
 			// generate a new house
-			WholeHouse hs = new WholeHouse("House", tm, i, thermParams,
-					tstatParams);
+			//WholeHouse hs = new WholeHouse("House", tm, i, thermParams, tstatParams, rn);
+			PctHouse hs = new PctHouse("House", tm, i, thermParams, tstatParams);
 			houseList.add(hs);
 		}
 

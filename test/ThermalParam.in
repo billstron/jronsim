@@ -1,6 +1,6 @@
 house_size 0, 1
 #crappo
-unit_size 1 2
+unit_size -1 0
 #insu_qual -1 0
 insu_qual 0 2
 slab_size 1.25

@@ -38,155 +38,145 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 
 /**
- *
+ * 
  * @author William Burke <billstron@gmail.com>
  */
-public class NeighborhoodTask extends TrjTask implements Envelope
-{
+public class NeighborhoodTask extends TrjTask implements Envelope {
 
-    private ArrayList<House> houseList = null;
-    private double dtLog = Double.POSITIVE_INFINITY;
-    private double tLogNext = 0;
-    private double Tout = 90;
-    private double solRad = 0;
-    private double Pagg = 0;
-    private PrintWriter logFile = null;
+	private ArrayList<House> houseList = null;
+	private double dtLog = Double.POSITIVE_INFINITY;
+	private double tLogNext = 0;
+	private double Tout = 90;
+	private double solRad = 0;
+	private double Pagg = 0;
+	private PrintWriter logFile = null;
 
-    /** Construct the NeighborhoodTask composed of a list of houses.
-     * 
-     * @param name
-     * @param sys
-     * @param dt
-     * @param dtLog
-     * @param houseList
-     */
-    public NeighborhoodTask(String name, TrjSys sys, double dt,
-            ArrayList<House> houseList)
-    {
-        super(name, sys, 0/*Initial State*/, true/*active*/);
-        this.dtNominal = dt;
-        this.stateNames.add("Run Houses");
-        this.houseList = houseList;
+	/**
+	 * Construct the NeighborhoodTask composed of a list of houses.
+	 * 
+	 * @param name
+	 * @param sys
+	 * @param dt
+	 * @param dtLog
+	 * @param houseList
+	 */
+	public NeighborhoodTask(String name, TrjSys sys, double dt,
+			ArrayList<House> houseList) {
+		super(name, sys, 0/* Initial State */, true/* active */);
+		this.dtNominal = dt;
+		this.stateNames.add("Run Houses");
+		this.houseList = houseList;
 
-        this.dtLog = Double.POSITIVE_INFINITY;
-    }
+		this.dtLog = Double.POSITIVE_INFINITY;
+	}
 
-    public NeighborhoodTask(String name, TrjSys sys, double dt,
-            ArrayList<House> houseList, double dtLog, PrintWriter logFile)
-    {
-        super(name, sys, 0/*Initial State*/, true/*active*/);
-        this.dtNominal = dt;
-        this.stateNames.add("Run Houses");
-        this.houseList = houseList;
+	public NeighborhoodTask(String name, TrjSys sys, double dt,
+			ArrayList<House> houseList, double dtLog, PrintWriter logFile) {
+		super(name, sys, 0/* Initial State */, true/* active */);
+		this.dtNominal = dt;
+		this.stateNames.add("Run Houses");
+		this.houseList = houseList;
 
-        this.dtLog = dtLog;
-        this.logFile = logFile;
-    }
+		this.dtLog = dtLog;
+		this.logFile = logFile;
+	}
 
-    /** Get the most recent aggregate power consumption.
-     * 
-     * @return
-     */
-    public double getAggregatePower()
-    {
-        return Pagg;
-    }
+	/**
+	 * Get the most recent aggregate power consumption.
+	 * 
+	 * @return
+	 */
+	public double getAggregatePower() {
+		return Pagg;
+	}
 
-    /** Get the outside temperature.
-     * 
-     * @return
-     */
-    public double getOutsideTemp()
-    {
-        return Tout;
-    }
+	/**
+	 * Get the outside temperature.
+	 * 
+	 * @return
+	 */
+	public double getOutsideTemp() {
+		return Tout;
+	}
 
-    /** Get the solar radiation
-     *
-     * @return
-     */
-    public double getSolarRadiation()
-    {
-        return solRad;
-    }
+	/**
+	 * Get the solar radiation
+	 * 
+	 * @return
+	 */
+	public double getSolarRadiation() {
+		return solRad;
+	}
 
-    /** Set the solar radiation
-     *
-     * @param rad
-     */
-    public void setSolarRadiation(double rad)
-    {
-        solRad = rad;
-    }
+	/**
+	 * Set the solar radiation
+	 * 
+	 * @param rad
+	 */
+	public void setSolarRadiation(double rad) {
+		solRad = rad;
+	}
 
-    /** Set the Outside Temperature
-     *
-     * @param Tout
-     */
-    public void setOutsideTemp(double Tout)
-    {
-        this.Tout = Tout;
-    }
+	/**
+	 * Set the Outside Temperature
+	 * 
+	 * @param Tout
+	 */
+	public void setOutsideTemp(double Tout) {
+		this.Tout = Tout;
+	}
 
-    private void log()
-    {
-        if (logFile != null)
-        {
-            //System.out.println("here1");
-            // Print the neighborhood state
-            logFile.printf("%6.2f, %6.2f, %6.2f, %6.2f", sys.GetRunningTime(), Tout,
-                    solRad, Pagg);
-            // Then print the state of each house.
-            for (House hs : houseList)
-            {
-                //logFile.printf(", ");
-                hs.log(logFile);
-            }
-            // Finally send the return.
-            logFile.println();
-        }
-    }
+	private void log() {
+		if (logFile != null) {
+			// System.out.println("here1");
+			// Print the neighborhood state
+			logFile.printf("%6.2f\t %6.2f\t %6.2f\t %6.2f\t", sys.GetRunningTime(),
+					Tout, solRad, Pagg);
+			// Then print the state of each house.
+			for (House hs : houseList) {
+				// logFile.printf(", ");
+				hs.log(logFile);
+			}
+			// Finally send the return.
+			logFile.println();
+		}
+	}
 
-    /** Runs the task.  The only thing it does is update the environmental
-     * conditions and run each entry in the house list.
-     *
-     * @param sys
-     * @return
-     */
-    @Override
-    public boolean RunTask(TrjSys sys)
-    {
-        boolean stop = false;  // initialize the stop flag
-        Pagg = 0;
-        // run all of the houses
-        for (House hs : houseList)
-        {
-            // while the stop flag is not on
-            if (!stop)
-            {
-                hs.setOutsideTemp(Tout);
-                hs.setSolarRadiation(solRad);
-                // run the house
-                stop = hs.run();
-                Pagg += hs.getP();
-            }
-            else  // if the flag is true, stop
-            {
-                break;  // break from the for loop
-            }
-        }
-        // log when it is time.
-        if (sys.GetRunningTime() >= tLogNext)
-        {
-            log();
-            tLogNext += dtLog;
-        }
-        return stop;
-    }
+	/**
+	 * Runs the task. The only thing it does is update the environmental
+	 * conditions and run each entry in the house list.
+	 * 
+	 * @param sys
+	 * @return
+	 */
+	@Override
+	public boolean RunTask(TrjSys sys) {
+		boolean stop = false; // initialize the stop flag
+		Pagg = 0;
+		// run all of the houses
+		for (House hs : houseList) {
+			// while the stop flag is not on
+			if (!stop) {
+				hs.setOutsideTemp(Tout);
+				hs.setSolarRadiation(solRad);
+				// run the house
+				stop = hs.run();
+				Pagg += hs.getP();
+			} else // if the flag is true, stop
+			{
+				break; // break from the for loop
+			}
+		}
+		// log when it is time.
+		if (sys.GetRunningTime() >= tLogNext) {
+			log();
+			tLogNext += dtLog;
+		}
+		return stop;
+	}
 
-    @Override
-    public boolean RunTaskNow(TrjSys sys)
-    {
-        return CheckTime(sys.GetRunningTime());
-    }
+	@Override
+	public boolean RunTaskNow(TrjSys sys) {
+		return CheckTime(sys.GetRunningTime());
+	}
 }

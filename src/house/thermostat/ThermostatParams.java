@@ -37,9 +37,9 @@ import java.util.ArrayList;
  * 
  */
 public class ThermostatParams {
-	public double DRuserProfile;
-	public double costTolerance;
-	public SetpointTable setpoints;
+	double DRuserProfile;
+	double costTolerance;
+	SetpointTable setpoints;
 
 	/**
 	 * Construct the ThermostatParams Class.
