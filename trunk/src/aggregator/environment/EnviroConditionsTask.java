@@ -72,7 +72,7 @@ public class EnviroConditionsTask extends TrjTask
 
         // Create the condition models.  
         this.solarModel = new SolarRadiationModel(location);
-        //this.ToutModel = new OutsideTemperatureModel();
+        this.ToutModel = new OutsideTemperatureModel();
         try
         {
             this.ToutModel = new OutsideTempNrelData(

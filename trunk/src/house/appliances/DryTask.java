@@ -35,6 +35,9 @@ import TranRunJLite.TrjSys;
 import TranRunJLite.TrjTask;
 
 /**
+ * This task operates a clothes dryer. Turning it on automatically based on
+ * randomization.
+ * 
  * @author William Burke <billstron@gmail.com>
  * @date Mar 11, 2010
  */
@@ -42,24 +45,71 @@ public class DryTask extends TrjTask {
 	private double Pon;
 	private double Pcurrent;
 	private double tStart;
-	private double dtCycle = (1.5 * 3600.0);
-	private double dtOffMax = (7.0 * 24.0 * 3600.0);
+	private double dtCycle = (0.75 * 3600.0);
+	private double dtOffMax = (7. * 24.0 * 3600.0);
+	private double tNext = 0;
 	private BoundedRand rand;
 
+	// the task's states
 	private final static int STATE_ON = 1;
 	private final static int STATE_OFF = 0;
 
+	/**
+	 * Create the DryTask
+	 * 
+	 * @param name
+	 * @param sys
+	 * @param dt
+	 * @param Pon
+	 *            : Power consumed while on
+	 */
 	public DryTask(String name, TrjSys sys, double dt, double Pon) {
-
 		super(name, sys, 0/* Initial State */, true/* active */);
+
+		// initialize the class
+		initDryTask(dt, Pon, null);
+	}
+
+	/**
+	 * Create the DryTask
+	 * 
+	 * @param name
+	 * @param sys
+	 * @param dt
+	 * @param Pon
+	 *            : Power consumed while on
+	 * @param rand
+	 *            : Random number generator
+	 */
+	public DryTask(String name, TrjSys sys, double dt, double Pon,
+			BoundedRand rand) {
+		super(name, sys, 0/* Initial State */, true/* active */);
+
+		// initialize the class
+		initDryTask(dt, Pon, rand);
+	}
+
+	/**
+	 * Initialize the DryTask
+	 * 
+	 * @param dt
+	 * @param Pon
+	 * @param rand
+	 */
+	private void initDryTask(double dt, double Pon, BoundedRand rand) {
 		this.Pon = Pon;
 		this.Pcurrent = 0;
 		this.dtNominal = dt;
 		currentState = 0;
 		stateNames.add("Off");
 		stateNames.add("On");
-		
-		this.rand =  new BoundedRand();
+
+		if (rand == null) {
+			this.rand = new BoundedRand();
+		} else {
+			this.rand = rand;
+		}
+		tNext = rand.getBoundedRand(0, dtOffMax);
 	}
 
 	/**
@@ -84,15 +134,15 @@ public class DryTask extends TrjTask {
 		case STATE_OFF:
 			if (runEntry) {
 				tStart = t;
-				//System.out.println("off transition");
+				// System.out.println("off transition");
 			}
+			Pcurrent = 0.0;
 			// System.out.println("off");
 			// get a random number
-			double num = rand.getBoundedRand(0, dtOffMax);
 			nextState = -1;
 			// if the number is larger than the time remaining, transition
-			if (num > (dtOffMax - (t - tStart))) {
-				//System.out.println("here " + num);
+			if (t > tNext) {
+				// System.out.println("here " + num);
 				nextState = STATE_ON;
 			}
 
@@ -100,11 +150,13 @@ public class DryTask extends TrjTask {
 		case STATE_ON:
 			if (runEntry) {
 				tStart = t;
-				//System.out.println("on transition");
+				tNext = t + rand.getBoundedRand(0, dtOffMax);
+				// System.out.println("on transition");
 			}
 			Pcurrent = Pon;
 			nextState = -1;
 			if ((t - tStart) > dtCycle)
+
 				nextState = STATE_OFF;
 			break;
 		}

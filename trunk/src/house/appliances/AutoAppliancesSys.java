@@ -30,11 +30,16 @@
  */
 package house.appliances;
 
+import util.BoundedRand;
 import house.Consumer;
 import TranRunJLite.TrjSys;
 import TranRunJLite.TrjTime;
 
 /**
+ * This system runs any simple household appliances that should turn on
+ * automatically. The idea is to allow things like washing machines and clothes
+ * Driers to turn on without a (simulated) human intervening.
+ * 
  * @author William Burke <billstron@gmail.com>
  * @date Mar 11, 2010
  */
@@ -43,19 +48,27 @@ public class AutoAppliancesSys extends TrjSys implements Consumer {
 	String name;
 	private DryTask dryer;
 
-	public AutoAppliancesSys(String name, TrjTime tm) {
+	/**
+	 * Construct the AutoApplianceSys. This system runs simple household
+	 * appliances that should turn on and off automatically.
+	 * 
+	 * @param name
+	 * @param tm
+	 * @param rand
+	 */
+	public AutoAppliancesSys(String name, TrjTime tm, BoundedRand rand) {
 		super(tm);
 		this.name = name;
 		// construct the drytask
-		dryer = new DryTask("Clothes Dryer 0", this, 5.0, 1000);
+		dryer = new DryTask("Clothes Dryer 0", this, 5.0, 5000, rand);
 	}
 
-	/** Get the power demand
+	/**
+	 * Get the power demand
 	 * 
 	 * @return
 	 */
-	public double getP()
-    {
-        return dryer.getP();
-    }
+	public double getP() {
+		return dryer.getP();
+	}
 }

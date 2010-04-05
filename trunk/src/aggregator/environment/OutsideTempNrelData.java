@@ -140,7 +140,7 @@ public class OutsideTempNrelData extends OutsideTemperatureModel
         {
             t0 = tTable.get(i);
             t1 = tTable.get(i + 1);
-            if (t0.before(time) && t1.after(time))
+            if (t0.compareTo(time) <= 0 && t1.compareTo(time) > 0)
             {
                 i0 = i;
                 break;
@@ -150,13 +150,13 @@ public class OutsideTempNrelData extends OutsideTemperatureModel
         // get the differences in times
         double dt = t1.getTimeInMillis() - t0.getTimeInMillis();
         double t = time.getTimeInMillis() - t0.getTimeInMillis();
+        //System.out.printf("%d, %d\n", time.getTimeInMillis(), t0.getTimeInMillis());
         //System.out.println(dt + ", " + t);
         // get the differences in temps
         double T0 = ToutTable.get(i0);
         double dT = ToutTable.get(i0 + 1) - T0;
         // linearly interpolate
         Tout = T0 + dT * (t / dt);
-
         return Tout;
     }
 

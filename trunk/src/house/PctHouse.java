@@ -166,10 +166,10 @@ public class PctHouse implements Envelope, House {
 	 */
 	public void log(PrintWriter logFile) {
 		ThermalSys therm = (ThermalSys) sysList.get(THERM_I);
+		ThermostatSys tStat = (ThermostatSys) sysList.get(TSTAT_I);
 		if (logFile != null) {
-			logFile.printf("%d\t %.2f\t %.2f\t %.6f\t %.2f\n", idNum, tm
-					.getRunningTime(), therm.getOutsideTemp(), therm
-					.getTempInside(), therm.getP());
+			logFile.printf("%d\t %.2f\t %.2f\t %.2f\t", idNum, therm
+					.getTempInside(), tStat.getSetpointTemp(), therm.getP());
 		}
 	}
 

@@ -37,6 +37,8 @@ import java.io.PrintWriter;
 import house.thermostat.*;
 import java.util.ArrayList;
 
+import util.BoundedRand;
+
 /**
  * The house object contains a thermostat and a thermal simulation of a house.
  * 
@@ -46,13 +48,14 @@ public class WholeHouse implements Envelope, House {
 
 	private String name;
 	private int idNum;
-	private TrjTime tm;
 	private ArrayList<TrjSys> sysList = new ArrayList<TrjSys>();
 	private ArrayList<Consumer> consumList = new ArrayList<Consumer>();
+	private double Pdemand = 0; // aggregate demand
+
+	// indicates the position of the systems in the sysList
 	private final static int TSTAT_I = 0;
 	private final static int THERM_I = 1;
 	private final static int APPLI_I = 2;
-	private double Pdemand = 0;
 
 	/**
 	 * Construct a Pct House using specified thermal parameters
@@ -63,19 +66,21 @@ public class WholeHouse implements Envelope, House {
 	 * @param params
 	 */
 	public WholeHouse(String name, TrjTime tm, int idNum,
-			ThermalParams thermPar, ThermostatParams tstatPar) {
+			ThermalParams thermPar, ThermostatParams tstatPar, BoundedRand rand) {
+
 		// Create the thermal system with the default parameters
 		ThermalSys therm = new ThermalSys("Specific House", tm, thermPar);
+
 		// Create the thermostat system
-		Boolean gui = false;
 		ThermostatSys tstat = new ThermostatSys("Basic Thermostat", tm, therm,
 				tstatPar);
 
+		// Create the automatic appliance system
 		AutoAppliancesSys appliances = new AutoAppliancesSys(
-				"Automatic Appliances", tm);
+				"Automatic Appliances", tm, rand);
 
-		// Initialize the house
-		PctHouseInit(name, tm, idNum, therm, tstat, appliances);
+		// Initialize the house variables
+		initWholeHouse(name, tm, idNum, therm, tstat, appliances);
 	}
 
 	/**
@@ -87,11 +92,10 @@ public class WholeHouse implements Envelope, House {
 	 * @param therm
 	 * @param tstat
 	 */
-	private void PctHouseInit(String name, TrjTime tm, int idNum,
+	private void initWholeHouse(String name, TrjTime tm, int idNum,
 			ThermalSys therm, ThermostatSys tstat, AutoAppliancesSys appliances) {
 		// Initialize the simulation
 		this.name = name;
-		this.tm = tm;
 		this.idNum = idNum;
 
 		sysList.add(tstat); // this one is index 0
@@ -108,15 +112,20 @@ public class WholeHouse implements Envelope, House {
 	 * @return indicates the need to stop the program (true, false)
 	 */
 	public boolean run() {
-		// System.out.println("here0");
 		boolean stop = false;
-		// Run each system in the
-		// System.out.println("sysList size: " + sysList.size());
+		// for each system in the list
 		for (TrjSys sys : sysList) {
-			// System.out.println("here1");
+			// run the system
 			if (stop = sys.RunTasks()) {
-				break; // Run all of the tasks
+				break; // break out if the system indicates.
 			}
+		}
+		// get the power consumption
+		Pdemand = 0; // initialize
+		// for each system in the consumer list
+		for (Consumer cc : consumList) {
+			// get the power and add it to the aggregate
+			Pdemand += cc.getP();
 		}
 		return stop;
 	}
@@ -129,8 +138,7 @@ public class WholeHouse implements Envelope, House {
 		ThermalSys therm = (ThermalSys) sysList.get(THERM_I);
 		ThermostatSys tstat = (ThermostatSys) sysList.get(TSTAT_I);
 		if (logFile != null) {
-			logFile.printf("%d\t %.2f\t %.2f\t %.6f\t %.2f\t %.2f\t", idNum, tm
-					.getRunningTime(), therm.getOutsideTemp(), therm
+			logFile.printf("%d\t %.6f\t %.2f\t %.2f\t", idNum, therm
 					.getTempInside(), tstat.getSetpointTemp(), this.getP());
 		}
 	}
@@ -179,10 +187,7 @@ public class WholeHouse implements Envelope, House {
 	 * @return
 	 */
 	public double getP() {
-		Pdemand = 0;
-		for (Consumer cc : consumList) {
-			Pdemand += cc.getP();
-		}
+		double P = Pdemand;
 
 		return Pdemand;
 	}

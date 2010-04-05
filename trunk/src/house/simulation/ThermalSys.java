@@ -217,6 +217,7 @@ public class ThermalSys extends TrjSys implements HouseIO, Consumer {
 	 * @return
 	 */
 	public double getP() {
-		return thermSim.getP();
+		double p = thermSim.getP();
+		return p;
 	}
 }

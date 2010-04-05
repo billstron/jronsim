@@ -33,106 +33,128 @@ package house.thermostat;
 
 import java.util.Calendar;
 
-/** The definition of a setpoint
- *
+/**
+ * The definition of a setpoint
+ * 
  * @author William Burke <billstron@gmail.com>
  */
 public class Setpoint {
 
-    private double Tsp;
-    private int[] tm = new int[3];
-    private Label label;
-    
-    // enumeration for the time
-    public static final int HOUR = 0;
-    public static final int MINUTE = 1;
-    public static final int SECOND = 2;
+	private double Tsp;
+	private int[] tm = new int[3];
+	private Label label;
 
-    /** Labels for the Setpoint table entries
-     *
-     * @author WJBurke
-     */
-    enum Label {
+	// enumeration for the time
+	public static final int HOUR = 0;
+	public static final int MINUTE = 1;
+	public static final int SECOND = 2;
 
-        MORNING("Morning"),
-        DAY("Day"),
-        EVENING("Evening"),
-        NIGHT("Night");
-        private String name;
+	/**
+	 * Labels for the Setpoint table entries
+	 * 
+	 * @author WJBurke
+	 */
+	enum Label {
 
-        /** Constructor fo the Setpoint Lable enum
-         *
-         * @param name -- human readable name of the entry
-         */
-        Label(String name) {
-            this.name = name;
-        }
+		MORNING("Morning"), DAY("Day"), EVENING("Evening"), NIGHT("Night");
+		private String name;
 
-        /** Gets the name of the setpoint table entry
-         *
-         * @return name of the entry
-         */
-        public String getName() {
-            return this.name;
-        }
-    }
+		/**
+		 * Constructor fo the Setpoint Lable enum
+		 * 
+		 * @param name
+		 *            -- human readable name of the entry
+		 */
+		Label(String name) {
+			this.name = name;
+		}
 
-    /** Constructor for a setpoint
-     *
-     * @param Tsp -- Setpoint temperature (^oF)
-     * @param hour -- Start hour (24 hour format: 0 - 24)
-     * @param min -- Start minute
-     * @param label -- Label for this entry
-     */
-    Setpoint(double Tsp, int hour, int min, Label label) {
-        this.tm[HOUR] = hour;
-        this.tm[MINUTE] = min;
-        this.tm[SECOND] = 0;
+		/**
+		 * Gets the name of the setpoint table entry
+		 * 
+		 * @return name of the entry
+		 */
+		public String getName() {
+			return this.name;
+		}
+	}
 
-        this.Tsp = Tsp;
-        this.label = label;
-    }
+	/**
+	 * Constructor for a setpoint
+	 * 
+	 * @param Tsp
+	 *            -- Setpoint temperature (^oF)
+	 * @param hour
+	 *            -- Start hour (24 hour format: 0 - 24)
+	 * @param min
+	 *            -- Start minute
+	 * @param label
+	 *            -- Label for this entry
+	 */
+	Setpoint(double Tsp, int hour, int min, Label label) {
+		this.tm[HOUR] = hour;
+		this.tm[MINUTE] = min;
+		this.tm[SECOND] = 0;
 
-    /** Gets the setpoint temp.
-     *
-     * @return
-     */
-    double getTsp() {
-        return this.Tsp;
-    }
+		this.Tsp = Tsp;
+		this.label = label;
+	}
 
-    /** Gets the label.
-     *
-     * @return
-     */
-    Label getLabel() {
-        return label;
-    }
-    
-    int[] getTime(){
-    	return tm;
-    }
+	// Construct a setpoint from a double time
+	
+	Setpoint(double Tsp, double time, Label label) throws Exception {
+		if(time > 24) throw new Exception("time is wrong for the setpoint"); 
+		this.tm[HOUR] = (int) Math.floor(time);
+		this.tm[MINUTE] = (int) Math.floor(60 * (time - Math.floor(time)));
+		this.tm[SECOND] = 0;
 
-    /** Tells wether or not the calender time is before this setpoint entry.
-     *
-     * @param cal
-     * @return
-     */
-    boolean isBefore(Calendar cal) {
-        boolean isBefore = false;
-        if (tm[HOUR] < cal.get(Calendar.HOUR_OF_DAY)) {
-            isBefore = true;
-        } else if (tm[HOUR] == cal.get(Calendar.HOUR_OF_DAY)) {
-            if (tm[MINUTE] <= cal.get(Calendar.MINUTE)) {
-                isBefore = true;
-            } else if (tm[MINUTE] == cal.get(Calendar.MINUTE)) {
-                if (tm[SECOND] <= cal.get(Calendar.SECOND)) {
-                    isBefore = true;
-                } else {
-                    isBefore = false;
-                }
-            }
-        }
-        return isBefore;
-    }
+		this.Tsp = Tsp;
+		this.label = label;
+	}
+
+	/**
+	 * Gets the setpoint temp.
+	 * 
+	 * @return
+	 */
+	double getTsp() {
+		return this.Tsp;
+	}
+
+	/**
+	 * Gets the label.
+	 * 
+	 * @return
+	 */
+	Label getLabel() {
+		return label;
+	}
+
+	int[] getTime() {
+		return tm;
+	}
+
+	/**
+	 * Tells wether or not the calender time is before this setpoint entry.
+	 * 
+	 * @param cal
+	 * @return
+	 */
+	boolean isBefore(Calendar cal) {
+		boolean isBefore = false;
+		if (tm[HOUR] < cal.get(Calendar.HOUR_OF_DAY)) {
+			isBefore = true;
+		} else if (tm[HOUR] == cal.get(Calendar.HOUR_OF_DAY)) {
+			if (tm[MINUTE] <= cal.get(Calendar.MINUTE)) {
+				isBefore = true;
+			} else if (tm[MINUTE] == cal.get(Calendar.MINUTE)) {
+				if (tm[SECOND] <= cal.get(Calendar.SECOND)) {
+					isBefore = true;
+				} else {
+					isBefore = false;
+				}
+			}
+		}
+		return isBefore;
+	}
 }

@@ -164,7 +164,9 @@ public class ThermalParamsRand extends ThermalParams {
 			coolerHeatInputMax = (-12000 * UNIT_SAT_MAX) / 3600;
 		else if (coolerHeatInputMax > (-12000 * UNIT_SAT_MIN) / 3600)
 			coolerHeatInputMax = (-12000 * UNIT_SAT_MIN) / 3600;
+		
 		double coolerScale = coolerHeatInputMax / (baseCooler * SizeHouse);
+		//System.out.println("Cooler Size = " + SizeUnit + ", " + coolerHeatInputMax);
 		coolerMass = coolerMass * SizeHouse * coolerScale
 				* (1 + rn.getBoundedRand(-1.0, 1.0) * Wany);
 		coolerFanMax = coolerFanMax * SizeHouse * coolerScale;
