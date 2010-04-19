@@ -32,6 +32,8 @@ package house;
 import TranRunJLite.*;
 import aggregator.environment.Envelope;
 import house.appliances.AutoAppliancesSys;
+import house.occupant.LivingSpaceSys;
+import house.occupant.OccupantParams;
 import house.simulation.*;
 import java.io.PrintWriter;
 import house.thermostat.*;
@@ -56,6 +58,7 @@ public class WholeHouse implements Envelope, House {
 	private final static int TSTAT_I = 0;
 	private final static int THERM_I = 1;
 	private final static int APPLI_I = 2;
+	private final static int SPACE_I = 3;
 
 	/**
 	 * Construct a Pct House using specified thermal parameters
@@ -66,7 +69,12 @@ public class WholeHouse implements Envelope, House {
 	 * @param params
 	 */
 	public WholeHouse(String name, TrjTime tm, int idNum,
-			ThermalParams thermPar, ThermostatParams tstatPar, BoundedRand rand) {
+			ThermalParams thermPar, ThermostatParams tstatPar,
+			ArrayList<OccupantParams> occParList, BoundedRand rand) {
+
+		// create the living spaces system
+		LivingSpaceSys space = new LivingSpaceSys("Room and Space", tm, rand,
+				occParList, null, null);
 
 		// Create the thermal system with the default parameters
 		ThermalSys therm = new ThermalSys("Specific House", tm, thermPar);
@@ -79,8 +87,12 @@ public class WholeHouse implements Envelope, House {
 		AutoAppliancesSys appliances = new AutoAppliancesSys(
 				"Automatic Appliances", tm, rand);
 
+		// Add the systems into the living space
+		space.setThermalSys(therm);
+		space.setThermostatSys(tstat);
+
 		// Initialize the house variables
-		initWholeHouse(name, tm, idNum, therm, tstat, appliances);
+		initWholeHouse(name, tm, idNum, therm, tstat, appliances, space);
 	}
 
 	/**
@@ -93,7 +105,8 @@ public class WholeHouse implements Envelope, House {
 	 * @param tstat
 	 */
 	private void initWholeHouse(String name, TrjTime tm, int idNum,
-			ThermalSys therm, ThermostatSys tstat, AutoAppliancesSys appliances) {
+			ThermalSys therm, ThermostatSys tstat,
+			AutoAppliancesSys appliances, LivingSpaceSys space) {
 		// Initialize the simulation
 		this.name = name;
 		this.idNum = idNum;
@@ -101,9 +114,11 @@ public class WholeHouse implements Envelope, House {
 		sysList.add(tstat); // this one is index 0
 		sysList.add(therm); // this one is index 1
 		sysList.add(appliances);
+		sysList.add(space);
 
 		consumList.add(therm);
 		consumList.add(appliances);
+		consumList.add(space);
 	}
 
 	/**

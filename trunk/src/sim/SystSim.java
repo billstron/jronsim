@@ -35,6 +35,8 @@ import aggregator.SystemicSys;
 import house.House;
 import house.PctHouse;
 import house.WholeHouse;
+import house.occupant.OccupantParams;
+import house.occupant.OccupantParamsRand;
 import house.simulation.ThermalParams;
 import house.simulation.ThermalParamsRand;
 import house.thermostat.ThermostatParams;
@@ -93,9 +95,13 @@ public class SystSim {
 
 			// generate a set of thermostat params
 			ThermostatParams tstatParams = new ThermostatParamsRand(rn);
+			// generate the occupant parameters
+			ArrayList<OccupantParams> occParList = OccupantParamsRand.RandomList(null, rn);
 			// generate a new house
-			//WholeHouse hs = new WholeHouse("House", tm, i, thermParams, tstatParams, rn);
-			PctHouse hs = new PctHouse("House", tm, i, thermParams, tstatParams);
+			WholeHouse hs = new WholeHouse("House", tm, i, thermParams,
+					tstatParams, occParList, rn);
+			// PctHouse hs = new PctHouse("House", tm, i, thermParams,
+			// tstatParams);
 			houseList.add(hs);
 		}
 
