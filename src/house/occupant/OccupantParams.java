@@ -30,36 +30,84 @@
  */
 package house.occupant;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.util.StringTokenizer;
-
 /**
  * @author William Burke <billstron@gmail.com>
  * 
  */
 public class OccupantParams {
 
-	public double[] comfortTemp = new double[7]; // personal preference
-	public double[] DRcomfortTemp = new double[7];
-	public double[] motivationProb = new double[7]; // likliehood of acting
-	public double[] DRmotivationProb = new double[7];
-	public double[] wakeTime = new double[2]; // waking time range
-	public double[] sleepTime = new double[2]; // bed time range
-	public double[] leaveTime = new double[2]; // leaging time range
-	public double[] arriveTime = new double[2]; // arrive time range
-	public double tPatience; // time to wait before another touch (s)
+	// personal comfort preferences
+	double[] comfortTemp = { 76.15, 80.6, 84.4, 71.5, 67.5, 80.0, 81.9 };
+	double[] DRcomfortTemp = { 76.15, 80.6, 84.4, 71.5, 67.5, 80.0, 81.9 };
+	// Likelihood of acting
+	double[] motivationProb = { 0.0, 0.6, 0.9, 0.6, 0.9, 0.6, 0.6 };
+	double[] DRmotivationProb = { 0.0, 0.3, 0.5, 0.3, 0.5, 0.6, 0.6 };
+	// personal schedule preferences
+	double[] wakeTime = { 6.125, 0.5 };
+	double[] sleepTime = { 22.0, 0, 5 };
+	double[] leaveTime = { 7.25, 0.5 };
+	double[] arriveTime = { 16.25, 0.5 };
+	// time to wait before another touch (s)
+	double tPatience = 10. * 3600.;
 
-	/**
-	 * Construct the OccupantParams class
-	 * 
-	 */
-	public OccupantParams() {
+	// indicates the array indices
+	public static final int COMFORT = 0;
+	public static final int WARM = 1;
+	public static final int HOT = 2;
+	public static final int COOL = 3;
+	public static final int COLD = 4;
+	public static final int SLEEPING = 5;
+	public static final int AWAY = 6;
 
-		System.err.println("Unsupported Class");
-		System.exit(5000);
+	boolean working = true;
+	boolean dayShift = true;
+
+	int resNum = 0;
+	int numWorking = 0;
+	int numDayShift = 0;
+	int resHomeAllDay = -1;
+	int resWorks = 0;
+	double avgWakeTime = 0;
+	double avgSleepTime = 0;
+	double avgLeaveTime = 0;
+	double avgArriveTime = 0;
+	double avgComfortTemp = 0;
+	double avgSleepTemp = 0;
+	double avgAwayTemp = 0;
+
+	public boolean getWorking() {
+		return working;
 	}
 
+	public boolean getDayShift() {
+		return dayShift;
+	}
+
+	public double getWakeTime() {
+		return wakeTime[0];
+	}
+
+	public double getSleepTime() {
+		return sleepTime[0];
+	}
+
+	public double getLeaveTime() {
+		return leaveTime[0];
+	}
+
+	public double getArriveTime() {
+		return arriveTime[0];
+	}
+
+	public double getComfortTemp() {
+		return comfortTemp[COMFORT];
+	}
+
+	public double getSleepTemp() {
+		return comfortTemp[SLEEPING];
+	}
+
+	public double getAwayTemp() {
+		return comfortTemp[AWAY];
+	}
 }

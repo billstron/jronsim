@@ -31,14 +31,23 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 		// initialize the occupant list
 		occupantList = new ArrayList<OccupantTask>(paramList.size());
 		// construct the occupants and put them inside list
-		for (int i = 0; i <= paramList.size(); i++) {
+		for (int i = 0; i < paramList.size(); i++) {
 			String tName = "Occupant " + 0;
 			occupantList.add(new OccupantTask(tName, this, paramList.get(i), i,
 					rand));
+			specifyHome();
 		}
-		
+
 		this.therm = therm;
 		this.tStat = tStat;
+	}
+
+	public void setThermalSys(ThermalSys sys) {
+		this.therm = sys;
+	}
+
+	public void setThermostatSys(ThermostatSys sys) {
+		this.tStat = sys;
 	}
 
 	@Override
@@ -46,32 +55,107 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 		// TODO Auto-generated method stub
 		return 0;
 	}
-	
-	double getTempInside(){
+
+	double getTempInside() {
 		return therm.getTempInside();
 	}
-	
-	double getSetpointTemp(){
+
+	double getSetpointTemp() {
 		return tStat.getSetpointTemp();
 	}
-	
-	void specifyHome(){
+
+	void specifyHome() {
 		numHome += 1;
 	}
-	
-	void specifyAway(){
+
+	void specifyAway() {
 		numHome -= 1;
 	}
-	
-	int getTotalHome(){
+
+	int getTotalHome() {
 		return numHome;
 	}
-	
-	int getDRState(){
+
+	int getDRState() {
 		return 0;
 	}
-	
-	void adjustSetpoint(double dT){
-		System.out.println("Attempt to change the setpoint.  This is not implemented");
+
+	void adjustSetpoint(double dT) {
+		System.out
+				.println("Attempt to change the setpoint.  This is not implemented");
+	}
+
+	public int getNumWorking() {
+		int numWorking = 0;
+		for (OccupantTask task : occupantList) {
+			if (task.getWorking())
+				numWorking++;
+		}
+		return numWorking;
+	}
+
+	public int getNumDayShift() {
+		int numDay = 0;
+		for (OccupantTask task : occupantList) {
+			if (task.getDayShift())
+				numDay++;
+		}
+		return numDay;
+	}
+
+	public double getAvgWakeTime() {
+		double out = 0.;
+		for (OccupantTask task : occupantList) {
+			out += task.getWakeTime();
+		}
+		return out / occupantList.size();
+	}
+
+	public double getAvgSleepTime() {
+		double out = 0.;
+		for (OccupantTask task : occupantList) {
+			out += task.getSleepTime();
+		}
+		return out / occupantList.size();
+	}
+
+	public double getAvgLeaveTime() {
+		double out = 0.;
+		for (OccupantTask task : occupantList) {
+			out += task.getLeaveTime();
+		}
+		return out / occupantList.size();
+	}
+
+	public double getAvgArriveTime() {
+		double out = 0.;
+		for (OccupantTask task : occupantList) {
+			out += task.getArriveTime();
+		}
+		return out / occupantList.size();
+	}
+
+	public double getAvgComfortTemp() {
+		double out = 0.;
+		for (OccupantTask task : occupantList) {
+			out += task.getComfortTemp();
+		}
+		return out / occupantList.size();
+	}
+
+	public double getAvgSleepTemp() {
+		double out = 0.;
+		for (OccupantTask task : occupantList) {
+			out += task.getSleepTemp();
+		}
+		return out / occupantList.size();
+	}
+
+	public double getAvgAwayTemp() {
+		double out = 0.;
+		for (OccupantTask task : occupantList) {
+			out += task.getAwayTemp();
+		}
+		return out / occupantList.size();
 	}
 }

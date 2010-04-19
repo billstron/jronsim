@@ -57,14 +57,6 @@ public class OccupantTask extends TrjTask {
 	private BoundedRand rand;
 	private LivingSpaceSys sys;
 
-	int COMFORT = 0;
-	int WARM = 1;
-	int HOT = 2;
-	int COOL = 3;
-	int COLD = 4;
-	int SLEEPING = 5;
-	int AWAY = 6;
-
 	// Control Task states
 	static final int AWAKE_COMFORTABLE_STATE = 0;
 	static final int AWAKE_WARM_STATE = 1;
@@ -131,6 +123,7 @@ public class OccupantTask extends TrjTask {
 
 	private int AwakeComfortableState(double t) {
 		// Get the current calendar
+		//System.out.println(t);
 		Calendar now = this.sys.GetClaendar(t);
 		if (this.runEntry) {
 			double tHrs = Conversion.CalendarToHourOfDay(now);
@@ -200,9 +193,9 @@ public class OccupantTask extends TrjTask {
 			nextState = transNext;
 		// if the next transition is to the sleeping state, check the comfort
 		if (nextState == -1 || nextState == SLEEPING_STATE) {
-			if (insideTemp >= prefs.comfortTemp[WARM])
+			if (insideTemp >= prefs.comfortTemp[OccupantParams.WARM])
 				nextState = AWAKE_WARM_STATE;
-			else if (insideTemp <= prefs.comfortTemp[COOL])
+			else if (insideTemp <= prefs.comfortTemp[OccupantParams.COOL])
 				nextState = AWAKE_COOL_STATE;
 		}
 		return nextState;
@@ -218,7 +211,7 @@ public class OccupantTask extends TrjTask {
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
 			// get the current level of motivation.
-			curMotivation = prefs.motivationProb[WARM];
+			curMotivation = prefs.motivationProb[OccupantParams.WARM];
 		}
 
 		double randNum = 0;
@@ -228,23 +221,23 @@ public class OccupantTask extends TrjTask {
 		setpointTemp = sys.getSetpointTemp();
 
 		// Lower the setpoint if the person is warm and the timer has expired.
-		if (t > tNext && setpointTemp > prefs.comfortTemp[WARM]) {
+		if (t > tNext && setpointTemp > prefs.comfortTemp[OccupantParams.WARM]) {
 			// Flip a coin
 			randNum = rand.getBoundedRand(0, 1);
 			// Check if we are in a DR event. Get the proper probs.
 			if (sys.getDRState() > 0) {
 				// if in a DR event, check the DR motivation prob
-				if (randNum < prefs.DRmotivationProb[WARM]) {
+				if (randNum < prefs.DRmotivationProb[OccupantParams.WARM]) {
 					changeTemp = -Math.ceil(setpointTemp
-							- prefs.DRcomfortTemp[COMFORT]);
+							- prefs.DRcomfortTemp[OccupantParams.COMFORT]);
 					// reset the motivation
-					curMotivation = prefs.motivationProb[WARM];
+					curMotivation = prefs.motivationProb[OccupantParams.WARM];
 				}
 			} else {
 				// if not in a DR event, check the current motivation
 				if (randNum < curMotivation) {
 					changeTemp = -Math.ceil(setpointTemp
-							- prefs.comfortTemp[COMFORT]);
+							- prefs.comfortTemp[OccupantParams.COMFORT]);
 					// update the motivation
 					curMotivation += delMotivation;
 				}
@@ -295,9 +288,9 @@ public class OccupantTask extends TrjTask {
 		}
 
 		// transition based on temp.
-		if (insideTemp > prefs.comfortTemp[HOT])
+		if (insideTemp > prefs.comfortTemp[OccupantParams.HOT])
 			nextState = AWAKE_HOT_STATE;
-		else if (insideTemp <= prefs.comfortTemp[WARM])
+		else if (insideTemp <= prefs.comfortTemp[OccupantParams.WARM])
 			nextState = AWAKE_COMFORTABLE_STATE;
 		// set the time based transition when past time.
 		if (t > transTime)
@@ -315,7 +308,7 @@ public class OccupantTask extends TrjTask {
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
 			// get the current level of motivation.
-			curMotivation = prefs.motivationProb[HOT];
+			curMotivation = prefs.motivationProb[OccupantParams.HOT];
 		}
 
 		double randNum = 0;
@@ -325,23 +318,23 @@ public class OccupantTask extends TrjTask {
 		setpointTemp = sys.getSetpointTemp();
 
 		// Lower the setpoint if the person is hot.
-		if (t > tNext && setpointTemp > prefs.comfortTemp[HOT]) {
+		if (t > tNext && setpointTemp > prefs.comfortTemp[OccupantParams.HOT]) {
 			// flip a coin
 			randNum = rand.getBoundedRand(0, 1);
 			// Check if we are in a DR event. Get the proper probs.
 			if (sys.getDRState() > 0) {
 				// if in a DR event, check the DR motivation prob
-				if (randNum < prefs.DRmotivationProb[HOT]) {
+				if (randNum < prefs.DRmotivationProb[OccupantParams.HOT]) {
 					changeTemp = -Math.ceil(setpointTemp
-							- prefs.DRcomfortTemp[WARM]);
+							- prefs.DRcomfortTemp[OccupantParams.WARM]);
 					// reset the motivation
-					curMotivation = prefs.motivationProb[HOT];
+					curMotivation = prefs.motivationProb[OccupantParams.HOT];
 				}
 			} else {
 				// if not in an event, use the current motivation
 				if (randNum < curMotivation) {
 					changeTemp = -Math.ceil(setpointTemp
-							- prefs.comfortTemp[WARM]);
+							- prefs.comfortTemp[OccupantParams.WARM]);
 					// update the motivation
 					curMotivation += delMotivation;
 				}
@@ -391,7 +384,7 @@ public class OccupantTask extends TrjTask {
 		}
 
 		// transition based on comfort
-		if (insideTemp <= prefs.comfortTemp[HOT])
+		if (insideTemp <= prefs.comfortTemp[OccupantParams.HOT])
 			nextState = AWAKE_WARM_STATE;
 		// set the time based transition when past time.
 		if (t > transTime)
@@ -410,7 +403,7 @@ public class OccupantTask extends TrjTask {
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
 			// get the current level of motivation.
-			curMotivation = prefs.motivationProb[COOL];
+			curMotivation = prefs.motivationProb[OccupantParams.COOL];
 		}
 
 		double randNum = 0;
@@ -420,21 +413,21 @@ public class OccupantTask extends TrjTask {
 		setpointTemp = sys.getSetpointTemp();
 
 		// Raise the setpoint if the person is cool
-		if (t > tNext && setpointTemp < prefs.comfortTemp[COOL]) {
+		if (t > tNext && setpointTemp < prefs.comfortTemp[OccupantParams.COOL]) {
 			// flip a coin
 			randNum = rand.getBoundedRand(0, 1);
 			// Check if we are in a DR event. Get the proper probs.
 			if (sys.getDRState() > 0) {
 				// if in a DR event, check the DR motivation prob
-				if (randNum < prefs.DRmotivationProb[COOL]) {
+				if (randNum < prefs.DRmotivationProb[OccupantParams.COOL]) {
 					changeTemp = -Math.ceil(setpointTemp
-							- prefs.DRcomfortTemp[COMFORT]);
+							- prefs.DRcomfortTemp[OccupantParams.COMFORT]);
 					// reset the motivation
-					curMotivation = prefs.motivationProb[COOL];
+					curMotivation = prefs.motivationProb[OccupantParams.COOL];
 				}
 			} else {
 				if (randNum < curMotivation) {
-					changeTemp = Math.ceil(prefs.comfortTemp[COMFORT]
+					changeTemp = Math.ceil(prefs.comfortTemp[OccupantParams.COMFORT]
 							- insideTemp);
 					// update the motivation
 					curMotivation += delMotivation;
@@ -485,9 +478,9 @@ public class OccupantTask extends TrjTask {
 		}
 
 		// comfort based transiton
-		if (insideTemp <= prefs.comfortTemp[COLD])
+		if (insideTemp <= prefs.comfortTemp[OccupantParams.COLD])
 			nextState = AWAKE_COLD_STATE;
-		else if (insideTemp >= prefs.comfortTemp[COOL])
+		else if (insideTemp >= prefs.comfortTemp[OccupantParams.COOL])
 			nextState = AWAKE_COMFORTABLE_STATE;
 		// set the time based transition when past time.
 		if (t > transTime)
@@ -505,7 +498,7 @@ public class OccupantTask extends TrjTask {
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
 			// get the current level of motivation.
-			curMotivation = prefs.motivationProb[COLD];
+			curMotivation = prefs.motivationProb[OccupantParams.COLD];
 		}
 
 		double randNum = 0;
@@ -515,22 +508,22 @@ public class OccupantTask extends TrjTask {
 		setpointTemp = sys.getSetpointTemp();
 
 		// Raise the setpoint if the person is cold
-		if (t > tNext && setpointTemp < prefs.comfortTemp[COLD]) {
+		if (t > tNext && setpointTemp < prefs.comfortTemp[OccupantParams.COLD]) {
 			randNum = rand.getBoundedRand(0, 1);
 			// Check if we are in a DR event. Get the proper probs.
 			if (sys.getDRState() > 0) {
 				// if in a DR event, check the DR motivation prob
-				if (randNum < prefs.DRmotivationProb[COLD]) {
+				if (randNum < prefs.DRmotivationProb[OccupantParams.COLD]) {
 					changeTemp = -Math.ceil(setpointTemp
-							- prefs.DRcomfortTemp[COOL]);
+							- prefs.DRcomfortTemp[OccupantParams.COOL]);
 					// reset the motivation
-					curMotivation = prefs.motivationProb[COLD];
+					curMotivation = prefs.motivationProb[OccupantParams.COLD];
 				}
 			} else {
 				// if not in an event, use the current motivation
 				if (randNum < curMotivation) {
 					changeTemp = Math
-							.ceil(prefs.comfortTemp[COOL] - insideTemp);
+							.ceil(prefs.comfortTemp[OccupantParams.COOL] - insideTemp);
 					// update the motivation
 					curMotivation += delMotivation;
 				}
@@ -580,7 +573,7 @@ public class OccupantTask extends TrjTask {
 		}
 
 		// comfort based transtions
-		if (insideTemp >= prefs.comfortTemp[COLD])
+		if (insideTemp >= prefs.comfortTemp[OccupantParams.COLD])
 			nextState = AWAKE_COOL_STATE;
 		// set the time based transition when past time.
 		if (t > transTime)
@@ -600,14 +593,14 @@ public class OccupantTask extends TrjTask {
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
 			// get the current level of motivation.
-			curMotivation = prefs.motivationProb[SLEEPING];
+			curMotivation = prefs.motivationProb[OccupantParams.SLEEPING];
 
 			// get the setpoint
 			setpointTemp = sys.getSetpointTemp();
 
 			randNum = rand.getBoundedRand(0, 1);
-			if (randNum < prefs.motivationProb[SLEEPING])
-				changeTemp = Math.ceil(prefs.comfortTemp[SLEEPING]
+			if (randNum < prefs.motivationProb[OccupantParams.SLEEPING])
+				changeTemp = Math.ceil(prefs.comfortTemp[OccupantParams.SLEEPING]
 						- setpointTemp);
 			// specify to the room task that the resident is home
 			sys.specifyHome();
@@ -675,7 +668,7 @@ public class OccupantTask extends TrjTask {
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
 			// get the current level of motivation.
-			curMotivation = prefs.motivationProb[AWAY];
+			curMotivation = prefs.motivationProb[OccupantParams.AWAY];
 
 			// get the setpoint
 			setpointTemp = sys.getSetpointTemp();
@@ -685,8 +678,8 @@ public class OccupantTask extends TrjTask {
 			// find out how many people are left in the house
 			resLeftInHouse = sys.getTotalHome();
 			// check the motivation probability and the people count.
-			if (randNum < prefs.motivationProb[AWAY] && resLeftInHouse <= 1)
-				changeTemp = Math.ceil(prefs.comfortTemp[AWAY] - setpointTemp);
+			if (randNum < prefs.motivationProb[OccupantParams.AWAY] && resLeftInHouse <= 1)
+				changeTemp = Math.ceil(prefs.comfortTemp[OccupantParams.AWAY] - setpointTemp);
 			// specify to the room task that the resident is away
 			sys.specifyAway();
 		}
@@ -736,5 +729,41 @@ public class OccupantTask extends TrjTask {
 		if (t > transTime)
 			nextState = transNext;
 		return nextState;
+	}
+	
+	public boolean getWorking() {
+		return prefs.getWorking();
+	}
+
+	public boolean getDayShift() {
+		return prefs.getDayShift();
+	}
+
+	public double getWakeTime() {
+		return prefs.getWakeTime();
+	}
+
+	public double getSleepTime() {
+		return prefs.getSleepTime();
+	}
+
+	public double getLeaveTime() {
+		return prefs.getLeaveTime();
+	}
+
+	public double getArriveTime() {
+		return prefs.getArriveTime();
+	}
+
+	public double getComfortTemp() {
+		return prefs.getComfortTemp();
+	}
+
+	public double getSleepTemp() {
+		return prefs.getSleepTemp();
+	}
+
+	public double getAwayTemp() {
+		return prefs.getAwayTemp();
 	}
 }
