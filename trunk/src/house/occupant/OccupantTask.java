@@ -55,7 +55,6 @@ public class OccupantTask extends TrjTask {
 	private OccupantParams prefs;
 	private double tNext;
 	private BoundedRand rand;
-	private LivingSpaceSys sys;
 
 	// Control Task states
 	static final int AWAKE_COMFORTABLE_STATE = 0;
@@ -74,12 +73,15 @@ public class OccupantTask extends TrjTask {
 	 */
 	public OccupantTask(String name, LivingSpaceSys sys, OccupantParams prefs,
 			int resNum, BoundedRand rand) {
-		super(name, sys, AWAKE_COMFORTABLE_STATE /* initial state */, true /* initially active */);
+		super(name, sys, AWAKE_COMFORTABLE_STATE /* initial state */, true /*
+																		 * initially
+																		 * active
+																		 */);
 
 		this.prefs = prefs;
 		this.resNum = resNum;
 		this.rand = rand;
-		sys.specifyHome();
+		((LivingSpaceSys) this.sys).specifyHome();
 	}
 
 	/*
@@ -123,26 +125,23 @@ public class OccupantTask extends TrjTask {
 
 	private int AwakeComfortableState(double t) {
 		// Get the current calendar
-		//System.out.println(t);
-		Calendar now = this.sys.GetClaendar(t);
+		Calendar now = sys.GetCalendar(t);
 		if (this.runEntry) {
-			double tHrs = Conversion.CalendarToHourOfDay(now);
-
+			System.out.println("<AwakeComfortableState> entry");
 			// prepare the time based state transition variables.
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
 			// get the current level of motivation.
 			curMotivation = 0;
 			// specify to the room task that the resident is home
-			sys.specifyHome();
-			sys.specifyHome();
+			((LivingSpaceSys) this.sys).specifyHome();
 		}
 
 		double discomfortDelta = 0;
 
 		// Get the inside temperature and setpoint
-		insideTemp = sys.getTempInside();
-		setpointTemp = sys.getSetpointTemp();
+		insideTemp = ((LivingSpaceSys) this.sys).getTempInside();
+		setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 		int nextState = -1; // Default is no transition
 		double transHour = 0;
@@ -168,7 +167,7 @@ public class OccupantTask extends TrjTask {
 		}
 
 		// if the transition time hasn't been set yet
-		// First set if based on the leave time if past the start of window
+		// First set it based on the leave time if past the start of window
 		// then set it based on sleep if past the start of window.
 		if (transTime == Double.POSITIVE_INFINITY) {
 			if (tHrs > (prefs.leaveTime[0] + leaveMod)
@@ -186,6 +185,15 @@ public class OccupantTask extends TrjTask {
 				transNext = SLEEPING_STATE;
 				transTime = t + (transHour - tHrs) * 3600;
 			}
+			System.out.printf(
+					"prefs.wakeTime[0] < prefs.sleepTime[0] = %f < %f\n",
+					prefs.wakeTime[0],  prefs.sleepTime[0]);
+			System.out.println("tHrs = " + tHrs);
+			System.out.println("prefs.sleepTime[0] = " + prefs.sleepTime[0]);
+			System.out.println("sleepMod = " + sleepMod);
+			System.out.println("trnasHour = " + transHour);
+			System.out.println("transNext = " + transNext);
+			System.out.println("transTime = " + transTime);
 		}
 
 		// set the time based transition when past time.
@@ -203,10 +211,11 @@ public class OccupantTask extends TrjTask {
 
 	private int AwakeWarmState(double t) {
 		// Get the current calendar
-		Calendar now = this.sys.GetClaendar(t);
+		Calendar now = sys.GetCalendar(t);
 
 		if (this.runEntry) {
-			double tHrs = Conversion.CalendarToHourOfDay(now);
+			// double tHrs = Conversion.CalendarToHourOfDay(now);
+			System.out.println("<AwakeWarmState> entry");
 			// prepare the time based state transition variables.
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
@@ -214,18 +223,16 @@ public class OccupantTask extends TrjTask {
 			curMotivation = prefs.motivationProb[OccupantParams.WARM];
 		}
 
-		double randNum = 0;
-
 		// Get the inside temperature and setpoint
-		insideTemp = sys.getTempInside();
-		setpointTemp = sys.getSetpointTemp();
+		insideTemp = ((LivingSpaceSys) this.sys).getTempInside();
+		setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 		// Lower the setpoint if the person is warm and the timer has expired.
 		if (t > tNext && setpointTemp > prefs.comfortTemp[OccupantParams.WARM]) {
 			// Flip a coin
-			randNum = rand.getBoundedRand(0, 1);
+			double randNum = rand.getBoundedRand(0, 1);
 			// Check if we are in a DR event. Get the proper probs.
-			if (sys.getDRState() > 0) {
+			if (((LivingSpaceSys) this.sys).getDRState() > 0) {
 				// if in a DR event, check the DR motivation prob
 				if (randNum < prefs.DRmotivationProb[OccupantParams.WARM]) {
 					changeTemp = -Math.ceil(setpointTemp
@@ -254,8 +261,8 @@ public class OccupantTask extends TrjTask {
 		 * += 1; }
 		 */
 		if (changeTemp != 0) {
-			sys.adjustSetpoint(changeTemp);
-			sys.adjustSetpoint(changeTemp);
+			((LivingSpaceSys) this.sys).adjustSetpoint(changeTemp);
+			((LivingSpaceSys) this.sys).adjustSetpoint(changeTemp);
 			changeTemp = 0;
 		}
 
@@ -300,10 +307,11 @@ public class OccupantTask extends TrjTask {
 
 	private int AwakeHotState(double t) {
 		// Get the current calendar
-		Calendar now = this.sys.GetClaendar(t);
+		Calendar now = sys.GetCalendar(t);
 
 		if (this.runEntry) {
-			double tHrs = Conversion.CalendarToHourOfDay(now);
+			// double tHrs = Conversion.CalendarToHourOfDay(now);
+			System.out.println("<AwakeHotState> entry");
 			// prepare the time based state transition variables.
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
@@ -314,15 +322,15 @@ public class OccupantTask extends TrjTask {
 		double randNum = 0;
 
 		// Get the inside temperature and setpoint
-		insideTemp = sys.getTempInside();
-		setpointTemp = sys.getSetpointTemp();
+		insideTemp = ((LivingSpaceSys) this.sys).getTempInside();
+		setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 		// Lower the setpoint if the person is hot.
 		if (t > tNext && setpointTemp > prefs.comfortTemp[OccupantParams.HOT]) {
 			// flip a coin
 			randNum = rand.getBoundedRand(0, 1);
 			// Check if we are in a DR event. Get the proper probs.
-			if (sys.getDRState() > 0) {
+			if (((LivingSpaceSys) this.sys).getDRState() > 0) {
 				// if in a DR event, check the DR motivation prob
 				if (randNum < prefs.DRmotivationProb[OccupantParams.HOT]) {
 					changeTemp = -Math.ceil(setpointTemp
@@ -351,7 +359,7 @@ public class OccupantTask extends TrjTask {
 		 * += 1; }
 		 */
 		if (changeTemp != 0) {
-			sys.adjustSetpoint(changeTemp);
+			((LivingSpaceSys) this.sys).adjustSetpoint(changeTemp);
 			changeTemp = 0;
 		}
 
@@ -394,10 +402,11 @@ public class OccupantTask extends TrjTask {
 
 	private int AwakeCoolState(double t) {
 		// Get the current calendar
-		Calendar now = this.sys.GetClaendar(t);
+		Calendar now = sys.GetCalendar(t);
 
 		if (this.runEntry) {
-			double tHrs = Conversion.CalendarToHourOfDay(now);
+			// double tHrs = Conversion.CalendarToHourOfDay(now);
+			System.out.println("<AwakeCoolState> entry");
 
 			// prepare the time based state transition variables.
 			transTime = Double.POSITIVE_INFINITY;
@@ -409,15 +418,15 @@ public class OccupantTask extends TrjTask {
 		double randNum = 0;
 
 		// Get the inside temperature and setpoint
-		insideTemp = sys.getTempInside();
-		setpointTemp = sys.getSetpointTemp();
+		insideTemp = ((LivingSpaceSys) this.sys).getTempInside();
+		setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 		// Raise the setpoint if the person is cool
 		if (t > tNext && setpointTemp < prefs.comfortTemp[OccupantParams.COOL]) {
 			// flip a coin
 			randNum = rand.getBoundedRand(0, 1);
 			// Check if we are in a DR event. Get the proper probs.
-			if (sys.getDRState() > 0) {
+			if (((LivingSpaceSys) this.sys).getDRState() > 0) {
 				// if in a DR event, check the DR motivation prob
 				if (randNum < prefs.DRmotivationProb[OccupantParams.COOL]) {
 					changeTemp = -Math.ceil(setpointTemp
@@ -427,8 +436,9 @@ public class OccupantTask extends TrjTask {
 				}
 			} else {
 				if (randNum < curMotivation) {
-					changeTemp = Math.ceil(prefs.comfortTemp[OccupantParams.COMFORT]
-							- insideTemp);
+					changeTemp = Math
+							.ceil(prefs.comfortTemp[OccupantParams.COMFORT]
+									- insideTemp);
 					// update the motivation
 					curMotivation += delMotivation;
 				}
@@ -445,7 +455,7 @@ public class OccupantTask extends TrjTask {
 		 * += 1; }
 		 */
 		if (changeTemp != 0) {
-			sys.adjustSetpoint(changeTemp);
+			((LivingSpaceSys) this.sys).adjustSetpoint(changeTemp);
 			changeTemp = 0;
 		}
 
@@ -490,10 +500,11 @@ public class OccupantTask extends TrjTask {
 
 	private int AwakeColdState(double t) {
 		// Get the current calendar
-		Calendar now = this.sys.GetClaendar(t);
+		Calendar now = sys.GetCalendar(t);
 
 		if (this.runEntry) {
-			double tHrs = Conversion.CalendarToHourOfDay(now);
+			// double tHrs = Conversion.CalendarToHourOfDay(now);
+			System.out.println("<AwakeColdState> entry");
 			// prepare the time based state transition variables.
 			transTime = Double.POSITIVE_INFINITY;
 			transNext = -1;
@@ -504,14 +515,14 @@ public class OccupantTask extends TrjTask {
 		double randNum = 0;
 
 		// Get the inside temperature and setpoint
-		insideTemp = sys.getTempInside();
-		setpointTemp = sys.getSetpointTemp();
+		insideTemp = ((LivingSpaceSys) this.sys).getTempInside();
+		setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 		// Raise the setpoint if the person is cold
 		if (t > tNext && setpointTemp < prefs.comfortTemp[OccupantParams.COLD]) {
 			randNum = rand.getBoundedRand(0, 1);
 			// Check if we are in a DR event. Get the proper probs.
-			if (sys.getDRState() > 0) {
+			if (((LivingSpaceSys) this.sys).getDRState() > 0) {
 				// if in a DR event, check the DR motivation prob
 				if (randNum < prefs.DRmotivationProb[OccupantParams.COLD]) {
 					changeTemp = -Math.ceil(setpointTemp
@@ -523,7 +534,8 @@ public class OccupantTask extends TrjTask {
 				// if not in an event, use the current motivation
 				if (randNum < curMotivation) {
 					changeTemp = Math
-							.ceil(prefs.comfortTemp[OccupantParams.COOL] - insideTemp);
+							.ceil(prefs.comfortTemp[OccupantParams.COOL]
+									- insideTemp);
 					// update the motivation
 					curMotivation += delMotivation;
 				}
@@ -540,7 +552,7 @@ public class OccupantTask extends TrjTask {
 		 * += 1; }
 		 */
 		if (changeTemp != 0) {
-			sys.adjustSetpoint(changeTemp);
+			((LivingSpaceSys) this.sys).adjustSetpoint(changeTemp);
 			changeTemp = 0;
 		}
 
@@ -583,10 +595,11 @@ public class OccupantTask extends TrjTask {
 
 	private int SleepingState(double t) {
 		// Get the current calendar
-		Calendar now = this.sys.GetClaendar(t);
+		Calendar now = sys.GetCalendar(t);
 
 		if (this.runEntry) {
-			double tHrs = Conversion.CalendarToHourOfDay(now);
+			// double tHrs = Conversion.CalendarToHourOfDay(now);
+			System.out.println("<SleepingState> entry");
 			double randNum = 0;
 
 			// prepare the time based state transition variables.
@@ -596,19 +609,20 @@ public class OccupantTask extends TrjTask {
 			curMotivation = prefs.motivationProb[OccupantParams.SLEEPING];
 
 			// get the setpoint
-			setpointTemp = sys.getSetpointTemp();
+			setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 			randNum = rand.getBoundedRand(0, 1);
 			if (randNum < prefs.motivationProb[OccupantParams.SLEEPING])
-				changeTemp = Math.ceil(prefs.comfortTemp[OccupantParams.SLEEPING]
-						- setpointTemp);
+				changeTemp = Math
+						.ceil(prefs.comfortTemp[OccupantParams.SLEEPING]
+								- setpointTemp);
 			// specify to the room task that the resident is home
-			sys.specifyHome();
+			((LivingSpaceSys) this.sys).specifyHome();
 		}
 
 		// Get the inside temperature and setpoint
-		insideTemp = sys.getTempInside();
-		setpointTemp = sys.getSetpointTemp();
+		insideTemp = ((LivingSpaceSys) this.sys).getTempInside();
+		setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 		// Make any setpoint adjustments that haven't already been made
 		// Adjust the setpoint one press at a time.
@@ -618,7 +632,7 @@ public class OccupantTask extends TrjTask {
 		 * += 1; }
 		 */
 		if (changeTemp != 0) {
-			sys.adjustSetpoint(changeTemp);
+			((LivingSpaceSys) this.sys).adjustSetpoint(changeTemp);
 			changeTemp = 0;
 		}
 
@@ -656,10 +670,11 @@ public class OccupantTask extends TrjTask {
 	private int AwayState(double t) {
 
 		// Get the current calendar
-		Calendar now = this.sys.GetClaendar(t);
+		Calendar now = sys.GetCalendar(t);
 
 		if (this.runEntry) {
-			double tHrs = Conversion.CalendarToHourOfDay(now);
+			// double tHrs = Conversion.CalendarToHourOfDay(now);
+			System.out.println("<AwayState> entry");
 
 			double randNum = 0;
 			int resLeftInHouse = 0;
@@ -671,22 +686,24 @@ public class OccupantTask extends TrjTask {
 			curMotivation = prefs.motivationProb[OccupantParams.AWAY];
 
 			// get the setpoint
-			setpointTemp = sys.getSetpointTemp();
+			setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 			// flip a coin
 			randNum = rand.getBoundedRand(0, 1);
 			// find out how many people are left in the house
-			resLeftInHouse = sys.getTotalHome();
+			resLeftInHouse = ((LivingSpaceSys) this.sys).getTotalHome();
 			// check the motivation probability and the people count.
-			if (randNum < prefs.motivationProb[OccupantParams.AWAY] && resLeftInHouse <= 1)
-				changeTemp = Math.ceil(prefs.comfortTemp[OccupantParams.AWAY] - setpointTemp);
+			if (randNum < prefs.motivationProb[OccupantParams.AWAY]
+					&& resLeftInHouse <= 1)
+				changeTemp = Math.ceil(prefs.comfortTemp[OccupantParams.AWAY]
+						- setpointTemp);
 			// specify to the room task that the resident is away
-			sys.specifyAway();
+			((LivingSpaceSys) this.sys).specifyAway();
 		}
 
 		// Get the inside temperature and setpoint
-		insideTemp = sys.getTempInside();
-		setpointTemp = sys.getSetpointTemp();
+		insideTemp = ((LivingSpaceSys) this.sys).getTempInside();
+		setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 		// Make any setpoint adjustments that haven't already been made
 		// Adjust the setpoint one press at a time.
@@ -696,7 +713,7 @@ public class OccupantTask extends TrjTask {
 		 * += 1; }
 		 */
 		if (changeTemp != 0) {
-			sys.adjustSetpoint(changeTemp);
+			((LivingSpaceSys) this.sys).adjustSetpoint(changeTemp);
 			changeTemp = 0;
 		}
 
@@ -730,7 +747,7 @@ public class OccupantTask extends TrjTask {
 			nextState = transNext;
 		return nextState;
 	}
-	
+
 	public boolean getWorking() {
 		return prefs.getWorking();
 	}

@@ -81,8 +81,7 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 	}
 
 	void adjustSetpoint(double dT) {
-		System.out
-				.println("Attempt to change the setpoint.  This is not implemented");
+		System.out.println("Attempt to change the setpoint not implemented");
 	}
 
 	public int getNumWorking() {
