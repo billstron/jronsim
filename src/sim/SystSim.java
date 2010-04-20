@@ -88,7 +88,7 @@ public class SystSim {
 
 		// Create the list of houses.
 		ArrayList<House> houseList = new ArrayList<House>();
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 1; i++) {
 			// generate a new set of random house parameters
 			ThermalParams thermParams = new ThermalParamsRand(rn,
 					inputFiles[THERMALPARAMS]);
