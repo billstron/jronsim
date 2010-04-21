@@ -121,6 +121,7 @@ class GoalSeekerStateNormal extends TrjState {
         task.holdOn = ui.getHoldToggle();
         // Add the ui setpoint modification to the current value.  
         task.TspMod += ui.getTspMod();
+        //f(task.TspMod != 0.) System.out.println("Tsp Change");
         
         // If there is a new setpoint from the supervisor, get it and reset the
         // current setpoint modification.

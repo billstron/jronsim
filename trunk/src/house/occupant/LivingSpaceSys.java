@@ -19,9 +19,16 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 
 	private String Name;
 	private ArrayList<OccupantTask> occupantList;
+	private ArrayList<ApplianceAutoTask> autoList;
+	private ArrayList<ApplianceTimedCycleTask> timedList;
+	private ArrayList<ApplianceManualTask> manualList;
 	private ThermalSys therm;
 	private ThermostatSys tStat;
 	private int numHome = 0;
+	private double[] PFridgeHL = { 138., 3000 };
+	private double[] PDryerHL = { 300., 1000 };
+	private double[] dryerCycle = { 45 * 60, 120 * 60 };
+	private double[] PCompHL = { 30., 400. };
 
 	public LivingSpaceSys(String name, TrjTime tm, BoundedRand rand,
 			ArrayList<OccupantParams> paramList, ThermalSys therm,
@@ -35,11 +42,56 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 			String tName = "Occupant " + 0;
 			occupantList.add(new OccupantTask(tName, this, paramList.get(i), i,
 					rand));
-			specifyHome();
 		}
+
+		// initialize the automatic appliance list
+		autoList = new ArrayList<ApplianceAutoTask>(3);
+		// construct a refrigerator task
+		double dtFridge = 5.;
+		double Pfridge = rand.getBoundedRand(PFridgeHL[0], PFridgeHL[1]);
+		double[] fridgeCycle = { Double.POSITIVE_INFINITY, 0 };
+		double[] fridgeOff = { 0., 0. };
+		autoList.add(new ApplianceAutoTask("Refrigerator", this, dtFridge,
+				Pfridge, 0., fridgeCycle, fridgeOff, rand));
+
+		// initialize the timed cycle list
+		timedList = new ArrayList<ApplianceTimedCycleTask>(3);
+		// construct the electric clothes dryer task
+		double dtDryer = 5.;
+		double Pdryer = rand.getBoundedRand(PDryerHL[0], PDryerHL[1]);
+		timedList.add(new ApplianceTimedCycleTask("Clothes Dryer", this,
+				dtDryer, Pdryer, 0., dryerCycle, rand));
+
+		// initialize the timed cycle list
+		manualList = new ArrayList<ApplianceManualTask>(3);
+		// construct a computer task
+		double dtComputer = 5.;
+		double Pcomputer = rand.getBoundedRand(PCompHL[0], PCompHL[1]);
+		manualList.add(new ApplianceManualTask("Computer", this, dtComputer,
+				Pcomputer, 0., rand));
 
 		this.therm = therm;
 		this.tStat = tStat;
+	}
+	
+	public void switchOnApplianceTimedCycle(int i){
+		timedList.get(i).switchOn();
+	}
+	
+	public boolean isOnApplianceTimedCycle(int i){
+		return timedList.get(i).isOn();
+	}
+	
+	public void switchOnApplianceManual(int i){
+		manualList.get(i).switchOn();
+	}
+	
+	public void switchOffApplianceManual(int i){
+		manualList.get(i).switchOff();
+	}
+
+	public boolean isOnApplianceManual(int i){
+		return manualList.get(i).isOn();
 	}
 
 	public void setThermalSys(ThermalSys sys) {
@@ -81,7 +133,8 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 	}
 
 	void adjustSetpoint(double dT) {
-		System.out.println("Attempt to change the setpoint not implemented");
+		// System.out.println("Tsp Change");
+		tStat.setSetpointChange(dT);
 	}
 
 	public int getNumWorking() {

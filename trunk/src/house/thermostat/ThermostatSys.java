@@ -158,4 +158,22 @@ public class ThermostatSys extends TrjSys {
 	public double getSetpointTemp() {
 		return goalSeeker.getSetpointTemp();
 	}
+
+	/**
+	 * Adjust the current setpoint by the specified amount.
+	 * 
+	 * @param dT
+	 */
+	public void setSetpointChange(double dT) {
+		userInterface.setSetpointChange(dT);
+	}
+
+	/**
+	 * Set the current setpoint to the specified value.
+	 * 
+	 * @param Tsp
+	 */
+	public void setSetpoint(double Tsp) {
+		userInterface.setTsp(Tsp);
+	}
 }

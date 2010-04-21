@@ -30,8 +30,9 @@
  */
 package house.thermostat;
 
-import java.util.ArrayList;
+import house.occupant.OccupantParams;
 
+import java.util.ArrayList;
 
 import util.BoundedRand;
 
@@ -50,29 +51,89 @@ public class ThermostatParamsRand extends ThermostatParams {
 	private double avgArriveTime = 17.0;
 	private double avgSleepTemp = 76.0;
 	private double avgSleepTime = 22.0;
-	private boolean everyoneWorks = true;
-	
-	private double[] comfortTemp = {72, 74};
-	private double[] wakeTime = {6.0, 8.0};
-	private double[] awayTemp = {74.0, 76.0};
-	private double[] leaveTime = {8.0, 10.0};
-	private double[] arriveTime = {16.0, 19.0};
-	private double[] sleepTemp = {74.0, 73.0};
-	private double[] sleepTime = {20.0, 23.0};
+	private boolean fullTable = true;
+
+	private double[] comfortTemp = { 72, 74 };
+	private double[] wakeTime = { 6.0, 8.0 };
+	private double[] awayTemp = { 74.0, 76.0 };
+	private double[] leaveTime = { 8.0, 10.0 };
+	private double[] arriveTime = { 16.0, 19.0 };
+	private double[] sleepTemp = { 74.0, 73.0 };
+	private double[] sleepTime = { 20.0, 23.0 };
 
 	public ThermostatParamsRand() throws Exception {
 		rand = new BoundedRand();
 		drawComfortParams();
 		setSetpoints();
 	}
-	
+
 	public ThermostatParamsRand(BoundedRand rand) throws Exception {
 		this.rand = rand;
 		drawComfortParams();
 		setSetpoints();
 	}
-	
-	private void drawComfortParams(){
+
+	public ThermostatParamsRand(BoundedRand rand,
+			ArrayList<OccupantParams> occParList) throws Exception {
+		this.rand = rand;
+		getOccupantComfortParams(occParList);
+		setSetpoints();
+	}
+
+	private void getOccupantComfortParams(ArrayList<OccupantParams> occParList) {
+
+		boolean everyoneWorks = true;
+		boolean dayShift = true;
+		for (OccupantParams par : occParList) {
+			if (!par.getWorking())
+				everyoneWorks = false;
+			if (!par.getDayShift())
+				dayShift = false;
+		}
+
+		if (dayShift) {
+			if (everyoneWorks)
+				fullTable = true;
+			else
+				fullTable = false;
+			avgComfortTemp = 0.;
+			avgWakeTime = 0.;
+			avgAwayTemp = 0.;
+			avgLeaveTime = 0.;
+			avgArriveTime = 0.;
+			avgSleepTemp = 0.;
+			avgSleepTime = 0.;
+			for (OccupantParams par : occParList) {
+				avgComfortTemp += par.getComfortTemp();
+				avgWakeTime += par.getWakeTime();
+				avgAwayTemp += par.getAwayTemp();
+				avgLeaveTime += par.getLeaveTime();
+				avgArriveTime += par.getArriveTime();
+				avgSleepTemp += par.getSleepTemp();
+				avgSleepTime += par.getSleepTime();
+			}
+			avgComfortTemp /= occParList.size();
+			avgWakeTime /= occParList.size();
+			avgAwayTemp /= occParList.size();
+			avgLeaveTime /= occParList.size();
+			avgArriveTime /= occParList.size();
+			avgSleepTemp /= occParList.size();
+			avgSleepTime /= occParList.size();
+		}
+		// use the first person's
+		else {
+			fullTable = false;
+			avgComfortTemp = occParList.get(0).getComfortTemp();
+			avgWakeTime = occParList.get(0).getWakeTime();
+			avgAwayTemp = occParList.get(0).getAwayTemp();
+			avgLeaveTime = occParList.get(0).getLeaveTime();
+			avgArriveTime = occParList.get(0).getArriveTime();
+			avgSleepTemp = occParList.get(0).getSleepTemp();
+			avgSleepTime = occParList.get(0).getSleepTime();
+		}
+	}
+
+	private void drawComfortParams() {
 		avgComfortTemp = rand.getBoundedRand(comfortTemp[0], comfortTemp[1]);
 		avgWakeTime = rand.getBoundedRand(wakeTime[0], wakeTime[1]);
 		avgAwayTemp = rand.getBoundedRand(awayTemp[0], awayTemp[1]);
@@ -95,7 +156,7 @@ public class ThermostatParamsRand extends ThermostatParams {
 		} else // uses tables
 		{
 			// look to see if everyone is working and on the day shift
-			if (everyoneWorks) {
+			if (fullTable) {
 				tableDay.add(new Setpoint(avgComfortTemp, avgWakeTime,
 						Setpoint.Label.MORNING));
 				tableDay.add(new Setpoint(avgAwayTemp, avgLeaveTime,

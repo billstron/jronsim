@@ -92,21 +92,28 @@ public class OccupantTask extends TrjTask {
 	@Override
 	public boolean RunTask(TrjSys sys) {
 		double t = sys.GetRunningTime();
+		//System.out.println(currentState);
 		switch (this.currentState) {
 		case AWAKE_COMFORTABLE_STATE:
-			this.AwakeComfortableState(t);
+			nextState = this.AwakeComfortableState(t);
 			break;
 		case AWAKE_WARM_STATE:
+			nextState = this.AwakeWarmState(t);
 			break;
 		case AWAKE_HOT_STATE:
+			nextState = this.AwakeHotState(t);
 			break;
 		case AWAKE_COOL_STATE:
+			nextState = this.AwakeCoolState(t);
 			break;
 		case AWAKE_COLD_STATE:
+			nextState = this.AwakeColdState(t);
 			break;
 		case SLEEPING_STATE:
+			nextState = this.SleepingState(t);
 			break;
 		case AWAY_STATE:
+			nextState = this.AwayState(t);
 			break;
 		}
 		return false;
@@ -185,15 +192,6 @@ public class OccupantTask extends TrjTask {
 				transNext = SLEEPING_STATE;
 				transTime = t + (transHour - tHrs) * 3600;
 			}
-			System.out.printf(
-					"prefs.wakeTime[0] < prefs.sleepTime[0] = %f < %f\n",
-					prefs.wakeTime[0],  prefs.sleepTime[0]);
-			System.out.println("tHrs = " + tHrs);
-			System.out.println("prefs.sleepTime[0] = " + prefs.sleepTime[0]);
-			System.out.println("sleepMod = " + sleepMod);
-			System.out.println("trnasHour = " + transHour);
-			System.out.println("transNext = " + transNext);
-			System.out.println("transTime = " + transTime);
 		}
 
 		// set the time based transition when past time.
@@ -206,6 +204,7 @@ public class OccupantTask extends TrjTask {
 			else if (insideTemp <= prefs.comfortTemp[OccupantParams.COOL])
 				nextState = AWAKE_COOL_STATE;
 		}
+		//System.out.println(nextState);
 		return nextState;
 	}
 
@@ -261,7 +260,6 @@ public class OccupantTask extends TrjTask {
 		 * += 1; }
 		 */
 		if (changeTemp != 0) {
-			((LivingSpaceSys) this.sys).adjustSetpoint(changeTemp);
 			((LivingSpaceSys) this.sys).adjustSetpoint(changeTemp);
 			changeTemp = 0;
 		}
@@ -609,7 +607,7 @@ public class OccupantTask extends TrjTask {
 			curMotivation = prefs.motivationProb[OccupantParams.SLEEPING];
 
 			// get the setpoint
-			setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
+			setpointTemp = ((LivingSpaceSys)this.sys).getSetpointTemp();
 
 			randNum = rand.getBoundedRand(0, 1);
 			if (randNum < prefs.motivationProb[OccupantParams.SLEEPING])
