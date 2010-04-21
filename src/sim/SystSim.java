@@ -67,7 +67,7 @@ public class SystSim {
 
 	public static void main(String[] args) throws Exception {
 		double dt = 5.0; // Used for samples that need a time delta
-		double tFinal = 48 * 60 * 60; // sec
+		double tFinal = 48 * 3600; // sec
 
 		// initialize the random number generator
 		int seed = 35621;
@@ -93,10 +93,12 @@ public class SystSim {
 			ThermalParams thermParams = new ThermalParamsRand(rn,
 					inputFiles[THERMALPARAMS]);
 
-			// generate a set of thermostat params
-			ThermostatParams tstatParams = new ThermostatParamsRand(rn);
 			// generate the occupant parameters
-			ArrayList<OccupantParams> occParList = OccupantParamsRand.RandomList(null, rn);
+			ArrayList<OccupantParams> occParList = OccupantParamsRand
+					.RandomList(null, rn);
+			// generate a set of thermostat params
+			ThermostatParams tstatParams = new ThermostatParamsRand(rn,
+					occParList);
 			// generate a new house
 			WholeHouse hs = new WholeHouse("House", tm, i, thermParams,
 					tstatParams, occParList, rn);
