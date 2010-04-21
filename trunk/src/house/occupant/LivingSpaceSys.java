@@ -25,10 +25,10 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 	private ThermalSys therm;
 	private ThermostatSys tStat;
 	private int numHome = 0;
-	private double[] PFridgeHL = { 138., 3000 };
-	private double[] PDryerHL = { 300., 1000 };
-	private double[] dryerCycle = { 45 * 60, 120 * 60 };
-	private double[] PCompHL = { 30., 400. };
+	private double[] PFridgeHL = { 94., 343.};
+	private double[] PDryerHL = { 1800., 5000.};
+	private double[] dryerCycle = { 45. * 60., 5. * 60. };
+	private double[] PCompHL = { 160., 240. };
 
 	public LivingSpaceSys(String name, TrjTime tm, BoundedRand rand,
 			ArrayList<OccupantParams> paramList, ThermalSys therm,
@@ -73,24 +73,27 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 		this.therm = therm;
 		this.tStat = tStat;
 	}
-	
-	public void switchOnApplianceTimedCycle(int i){
+
+	public void switchOnApplianceTimedCycle(int i) {
+		//System.out.println("switchOnApplianceTimedCycle( " + i + " )");
 		timedList.get(i).switchOn();
 	}
-	
-	public boolean isOnApplianceTimedCycle(int i){
+
+	public boolean isOnApplianceTimedCycle(int i) {
 		return timedList.get(i).isOn();
 	}
-	
-	public void switchOnApplianceManual(int i){
+
+	public void switchOnApplianceManual(int i) {
+		//System.out.println("switchOnApplianceManual( " + i + " )");
 		manualList.get(i).switchOn();
 	}
-	
-	public void switchOffApplianceManual(int i){
+
+	public void switchOffApplianceManual(int i) {
+		//System.out.println("switchOffApplianceManual( " + i + " )");
 		manualList.get(i).switchOff();
 	}
 
-	public boolean isOnApplianceManual(int i){
+	public boolean isOnApplianceManual(int i) {
 		return manualList.get(i).isOn();
 	}
 
@@ -104,8 +107,14 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 
 	@Override
 	public double getP() {
-		// TODO Auto-generated method stub
-		return 0;
+		double P = 0;
+		for(ApplianceAutoTask tsk : autoList)
+			P += tsk.getP();
+		for(ApplianceTimedCycleTask tsk : timedList)
+			P += tsk.getP();
+		for(ApplianceManualTask tsk : manualList)
+			P += tsk.getP();
+		return P;
 	}
 
 	double getTempInside() {
@@ -133,7 +142,7 @@ public class LivingSpaceSys extends TrjSys implements Consumer {
 	}
 
 	void adjustSetpoint(double dT) {
-		// System.out.println("Tsp Change");
+		//System.out.println("adjustSetpoint( " + dT + " )");
 		tStat.setSetpointChange(dT);
 	}
 

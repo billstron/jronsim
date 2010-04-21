@@ -80,7 +80,7 @@ public class ApplianceManualTask extends TrjTask {
 	 */
 	boolean isOn() {
 		boolean on = false;
-		if (currentState == STATE_ON)
+		if (currentState == STATE_ON || command == CMD_ON)
 			on = true;
 		return on;
 	}
@@ -103,6 +103,7 @@ public class ApplianceManualTask extends TrjTask {
 			if (command == CMD_ON) {
 				command = CMD_NONE;
 				nextState = STATE_ON;
+				System.out.println("\tManual ON at " + t/3600);
 			}
 			break;
 		case STATE_ON: // the appliance is on
@@ -112,6 +113,7 @@ public class ApplianceManualTask extends TrjTask {
 			if (command == CMD_OFF) {
 				command = CMD_NONE;
 				nextState = STATE_OFF;
+				System.out.println("\tManual OFF at " + t/3600);
 			}
 			break;
 		}

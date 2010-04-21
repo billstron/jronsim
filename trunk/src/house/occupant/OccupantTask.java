@@ -55,6 +55,13 @@ public class OccupantTask extends TrjTask {
 	private OccupantParams prefs;
 	private double tNext;
 	private BoundedRand rand;
+	private double[] tOnTimedLast = { 0. };
+	private double[] tOnManualLast = { 0. };
+	private double[] tOffManualLast = { 0. };
+	double dtOnTimedTime[][] = { { 6. * 3600., 12. * 3600. } };
+	double dtOnManualTime[][] = { { 3. * 3600., 6. * 3600. } };
+	double dtCycleManualTime[][] = { { 1. * 3600, 4. * 3600. } };
+	private int ApplianceManualState;
 
 	// Control Task states
 	static final int AWAKE_COMFORTABLE_STATE = 0;
@@ -64,6 +71,9 @@ public class OccupantTask extends TrjTask {
 	static final int AWAKE_COLD_STATE = 4;
 	static final int SLEEPING_STATE = 5;
 	static final int AWAY_STATE = 6;
+	// appliance manual sub-states
+	private static final int MANUAL_ON = 1;
+	private static final int MANUAL_OFF = 0;
 
 	/**
 	 * @param name
@@ -73,10 +83,7 @@ public class OccupantTask extends TrjTask {
 	 */
 	public OccupantTask(String name, LivingSpaceSys sys, OccupantParams prefs,
 			int resNum, BoundedRand rand) {
-		super(name, sys, AWAKE_COMFORTABLE_STATE /* initial state */, true /*
-																		 * initially
-																		 * active
-																		 */);
+		super(name, sys, AWAKE_COMFORTABLE_STATE /* state */, true /* active */);
 
 		this.prefs = prefs;
 		this.resNum = resNum;
@@ -92,22 +99,32 @@ public class OccupantTask extends TrjTask {
 	@Override
 	public boolean RunTask(TrjSys sys) {
 		double t = sys.GetRunningTime();
-		//System.out.println(currentState);
+		// System.out.println(currentState);
 		switch (this.currentState) {
 		case AWAKE_COMFORTABLE_STATE:
 			nextState = this.AwakeComfortableState(t);
+			ApplianceTimedSwitchSubTask(t);
+			ApplianceManualSwitchSubTask(t);
 			break;
 		case AWAKE_WARM_STATE:
 			nextState = this.AwakeWarmState(t);
+			ApplianceTimedSwitchSubTask(t);
+			ApplianceManualSwitchSubTask(t);
 			break;
 		case AWAKE_HOT_STATE:
 			nextState = this.AwakeHotState(t);
+			ApplianceTimedSwitchSubTask(t);
+			ApplianceManualSwitchSubTask(t);
 			break;
 		case AWAKE_COOL_STATE:
 			nextState = this.AwakeCoolState(t);
+			ApplianceTimedSwitchSubTask(t);
+			ApplianceManualSwitchSubTask(t);
 			break;
 		case AWAKE_COLD_STATE:
 			nextState = this.AwakeColdState(t);
+			ApplianceTimedSwitchSubTask(t);
+			ApplianceManualSwitchSubTask(t);
 			break;
 		case SLEEPING_STATE:
 			nextState = this.SleepingState(t);
@@ -128,6 +145,71 @@ public class OccupantTask extends TrjTask {
 	public boolean RunTaskNow(TrjSys sys) {
 
 		return CheckTime(sys.GetRunningTime());
+	}
+
+	private void ApplianceTimedSwitchSubTask(double t) {
+		// for each appliance
+		for (int i = 0; i < tOnTimedLast.length; i++) {
+			// generate a random number defining the amount of time to wait
+			double t0 = dtOnTimedTime[i][0];
+			double t1 = dtOnTimedTime[i][0] + dtOnTimedTime[i][1];
+			double dtTest = rand.getBoundedRand(t0, t1);
+			// check to see if we are past that time and the appliance is off
+			if (dtTest < (t - tOnTimedLast[i])
+					&& !((LivingSpaceSys) sys).isOnApplianceTimedCycle(i)) {
+				// switch the appliance on
+				// System.out.printf("t0, t1 = %f, %f\n", t0, t1);
+				// System.out.printf("dtTest = %f\n", dtTest);
+				// System.out.printf("t - tOnTimedLast = %f\n",
+				// t-tOnTimedLast[i]);
+				((LivingSpaceSys) sys).switchOnApplianceTimedCycle(i);
+				// set the last on time timer
+				tOnTimedLast[i] = t;
+			}
+		}
+	}
+
+	private void ApplianceManualSwitchSubTask(double t) {
+		// for each appliance
+		for (int i = 0; i < tOnManualLast.length; i++) {
+			switch (ApplianceManualState) {
+			case MANUAL_ON:
+				// generate a random number defining the amount of time to wait
+				double d0 = dtCycleManualTime[i][0]; 
+				double d1 = dtCycleManualTime[i][0] + dtCycleManualTime[i][1];
+				double dtTestOn = rand.getBoundedRand(d0, d1);
+				// check to see if we are past that time
+				if (dtTestOn < (t - tOnManualLast[i])) {
+//					System.out.printf("\t\tt: %f\n", t/3600);
+//					System.out.printf("\t\t\tlast: %f\n", tOnManualLast[i]);
+//					System.out.printf("\t\t\tdt: %f\n", (t-tOnManualLast[i]));
+//					System.out.printf("\t\t\tdtTestOff: %f\n", dtTestOn);
+//					System.out.printf("\t\t\t\td0, d1: %f, %f\n", d0, d1);
+					// switch the appliance off
+					((LivingSpaceSys) sys).switchOffApplianceManual(i);
+					// transition to the off state
+					ApplianceManualState = MANUAL_OFF;
+				}
+				break;
+			case MANUAL_OFF:
+				// generate a random number defining the amount of time to wait
+				double dtTestOff = rand.getBoundedRand(dtOnManualTime[i][0],
+						dtOnManualTime[i][0] + dtOnManualTime[i][1]);
+				// check to see if we are past that time and the appliance is
+				// off
+				if (dtTestOff < (t - tOnManualLast[i])
+						&& !((LivingSpaceSys) sys).isOnApplianceManual(i)) {
+					// switch the appliance on
+					((LivingSpaceSys) sys).switchOnApplianceManual(i);
+					// set the last on time timer
+					tOnManualLast[i] = t;
+					// transition to the on state
+					ApplianceManualState = MANUAL_ON;
+					
+				}
+				break;
+			}
+		}
 	}
 
 	private int AwakeComfortableState(double t) {
@@ -204,7 +286,7 @@ public class OccupantTask extends TrjTask {
 			else if (insideTemp <= prefs.comfortTemp[OccupantParams.COOL])
 				nextState = AWAKE_COOL_STATE;
 		}
-		//System.out.println(nextState);
+		// System.out.println(nextState);
 		return nextState;
 	}
 
@@ -607,7 +689,7 @@ public class OccupantTask extends TrjTask {
 			curMotivation = prefs.motivationProb[OccupantParams.SLEEPING];
 
 			// get the setpoint
-			setpointTemp = ((LivingSpaceSys)this.sys).getSetpointTemp();
+			setpointTemp = ((LivingSpaceSys) this.sys).getSetpointTemp();
 
 			randNum = rand.getBoundedRand(0, 1);
 			if (randNum < prefs.motivationProb[OccupantParams.SLEEPING])
