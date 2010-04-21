@@ -46,6 +46,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import util.BoundedRand;
@@ -71,6 +72,8 @@ public class SystSim {
 
 		// initialize the random number generator
 		int seed = 35621;
+		//Calendar now = Calendar.getInstance();
+		//int seed = (int) now.getTimeInMillis();
 		BoundedRand rn = new BoundedRand(seed);
 
 		// Create the calendar and timer
@@ -88,7 +91,7 @@ public class SystSim {
 
 		// Create the list of houses.
 		ArrayList<House> houseList = new ArrayList<House>();
-		for (int i = 0; i < 1; i++) {
+		for (int i = 0; i < 5; i++) {
 			// generate a new set of random house parameters
 			ThermalParams thermParams = new ThermalParamsRand(rn,
 					inputFiles[THERMALPARAMS]);

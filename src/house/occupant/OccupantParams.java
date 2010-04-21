@@ -48,7 +48,7 @@ public class OccupantParams {
 	double[] leaveTime = { 7.25, 0.5 };
 	double[] arriveTime = { 16.25, 0.5 };
 	// time to wait before another touch (s)
-	double tPatience = 10. * 3600.;
+	double tPatience = 10. * 60.; 
 
 	// indicates the array indices
 	public static final int COMFORT = 0;
